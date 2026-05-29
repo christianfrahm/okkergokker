@@ -1,0 +1,11 @@
+{
+  "name": "okkergokker",
+  "private": true,
+  "scripts": {
+    "dev": "serve .",
+    "start": "serve ."
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}

@@ -2,6 +2,15 @@
 
 Simpel GitHub Pages-side med én video der afspiller i loop.
 
+## Lokal test
+
+```bash
+npm install
+npm run dev
+```
+
+Åbn derefter **http://localhost:3000** i browseren.
+
 ## Opsætning
 
 1. Læg din videofil i roden af repoet som `video.mp4`
