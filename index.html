@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>okkergokker</title>
+  <script>
+    if (location.hash) {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+
+    addEventListener('hashchange', () => {
+      if (location.hash) {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    });
+  </script>
   <style>
     * {
       margin: 0;
@@ -132,10 +143,6 @@
     document.querySelector('.title').addEventListener('click', () => {
       document.querySelector('.playlist-section').scrollIntoView({ behavior: 'smooth' });
     });
-
-    if (location.hash) {
-      history.replaceState(null, '', location.pathname);
-    }
   </script>
 </body>
 </html>
