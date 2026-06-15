@@ -37,15 +37,20 @@
       position: relative;
       width: 100%;
       height: 100vh;
+      height: 100dvh;
       background: #000;
+      overflow: hidden;
     }
 
     video {
       position: absolute;
-      inset: 0;
+      top: 50%;
+      left: 50%;
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center center;
+      transform: translate(-50%, -50%);
       pointer-events: none;
       z-index: 0;
     }
@@ -79,20 +84,33 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      padding: 1.5rem;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      padding: 0.5rem;
       background: #000;
       overflow: hidden;
     }
 
     .ascii-art {
       color: #fff;
-      font-family: monospace;
-      font-size: min(calc((100vw - 3rem) / 52), calc((100vh - 3rem) / 33));
+      font-family: Consolas, "Courier New", Courier, monospace;
       line-height: 1;
       white-space: pre;
-      text-align: center;
+      text-align: left;
       margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    @media (max-width: 768px) {
+      video {
+        width: auto;
+        height: 100%;
+        min-width: 100%;
+        min-height: 100%;
+        max-width: none;
+      }
     }
   </style>
 </head>
@@ -140,9 +158,30 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
   </section>
   <script>
-    document.querySelector('.title').addEventListener('click', () => {
-      document.querySelector('.playlist-section').scrollIntoView({ behavior: 'smooth' });
+    const title = document.querySelector('.title');
+    const asciiArt = document.querySelector('.ascii-art');
+    const playlistSection = document.querySelector('.playlist-section');
+
+    function fitAsciiArt() {
+      const styles = getComputedStyle(playlistSection);
+      const paddingX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+      const paddingY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+      const maxWidth = playlistSection.clientWidth - paddingX;
+      const maxHeight = playlistSection.clientHeight - paddingY;
+      const baseSize = 16;
+
+      asciiArt.style.fontSize = `${baseSize}px`;
+      const scale = Math.min(maxWidth / asciiArt.scrollWidth, maxHeight / asciiArt.scrollHeight);
+      asciiArt.style.fontSize = `${baseSize * scale}px`;
+    }
+
+    title.addEventListener('click', () => {
+      playlistSection.scrollIntoView({ behavior: 'smooth' });
     });
+
+    fitAsciiArt();
+    addEventListener('resize', fitAsciiArt);
+    document.fonts.ready.then(fitAsciiArt);
   </script>
 </body>
 </html>
