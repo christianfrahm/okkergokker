@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>okkergokker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap" rel="stylesheet">
   <script>
     if (location.hash) {
       history.replaceState(null, '', location.pathname + location.search);
@@ -95,6 +98,16 @@
       scroll-snap-stop: always;
     }
 
+    .playlist-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-height: 100%;
+      gap: clamp(0.75rem, 2vh, 1.5rem);
+    }
+
     .ascii-art {
       color: #fff;
       font-family: Consolas, "Courier New", Courier, monospace;
@@ -104,6 +117,32 @@
       margin: 0;
       padding: 0;
       border: 0;
+      flex-shrink: 1;
+      min-height: 0;
+    }
+
+    .intro-text {
+      color: #fff;
+      font-family: "Courier Prime", Courier, monospace;
+      font-size: clamp(0.7rem, 2.2vw, 1rem);
+      line-height: 1.5;
+      text-align: center;
+      flex-shrink: 0;
+      max-width: 36rem;
+      padding: 0 0.5rem;
+    }
+
+    .intro-text p + p {
+      margin-top: 1em;
+    }
+
+    .intro-text a {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .intro-text a:hover {
+      text-decoration: underline;
     }
 
     @media (max-width: 768px) {
@@ -126,6 +165,7 @@
   </section>
 
   <section class="playlist-section">
+    <div class="playlist-content">
     <pre class="ascii-art">⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣠⣤⣴⣶⣶⣶⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⡴⠞⠛⣋⣭⣤⣤⣄⡀⠀⠀⢸⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⡀⠀⣠⡴⠾⠋⠁⠀⠐⠛⠋⠉⠛⣿⣿⡇⠀⠀⢸⡏⢻⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -159,35 +199,50 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⡇⠀⠀⠻⣆⠀⣼⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⠄⠀⠀⠙⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
+    <div class="intro-text">
+      <p>Independent website developer patrolling Copenhagen.</p>
+      <p>Unlike cowboys, I use modern technology to build, host and maintain sharp websites efficiently and affordably.</p>
+      <p>Need a new sheriff online?</p>
+      <p>Contact me at: <a href="mailto:howdy@okkergokker.dk">howdy@okkergokker.dk</a></p>
+    </div>
+    </div>
   </section>
   <script>
     const title = document.querySelector('.title');
     const hero = document.querySelector('.hero');
     const asciiArt = document.querySelector('.ascii-art');
+    const introText = document.querySelector('.intro-text');
+    const playlistContent = document.querySelector('.playlist-content');
     const playlistSection = document.querySelector('.playlist-section');
 
     function scrollToArt() {
       window.scrollTo({ top: hero.offsetHeight, behavior: 'smooth' });
     }
 
-    function fitAsciiArt() {
+    function fitContent() {
       const styles = getComputedStyle(playlistSection);
       const paddingX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
       const paddingY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+      const gap = parseFloat(getComputedStyle(playlistContent).gap) || 0;
       const maxWidth = playlistSection.clientWidth - paddingX;
       const maxHeight = playlistSection.clientHeight - paddingY;
       const baseSize = 16;
 
       asciiArt.style.fontSize = `${baseSize}px`;
-      const scale = Math.min(maxWidth / asciiArt.scrollWidth, maxHeight / asciiArt.scrollHeight);
+      const textHeight = introText.offsetHeight;
+      const availableHeight = Math.max(0, maxHeight - textHeight - gap);
+      const scale = Math.min(
+        maxWidth / asciiArt.scrollWidth,
+        availableHeight / asciiArt.scrollHeight
+      );
       asciiArt.style.fontSize = `${baseSize * scale}px`;
     }
 
     title.addEventListener('click', scrollToArt);
 
-    fitAsciiArt();
-    addEventListener('resize', fitAsciiArt);
-    document.fonts.ready.then(fitAsciiArt);
+    fitContent();
+    addEventListener('resize', fitContent);
+    document.fonts.ready.then(fitContent);
   </script>
 </body>
 </html>
