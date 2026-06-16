@@ -60,6 +60,12 @@
       z-index: 0;
     }
 
+    video::-webkit-media-controls,
+    video::-webkit-media-controls-start-playback-button {
+      display: none !important;
+      -webkit-appearance: none;
+    }
+
     .title {
       position: absolute;
       inset: 0;
@@ -158,7 +164,7 @@
 </head>
 <body>
   <section class="hero">
-    <video autoplay loop muted playsinline>
+    <video autoplay loop muted playsinline webkit-playsinline preload="auto" disablepictureinpicture>
       <source src="video.mp4" type="video/mp4">
     </video>
     <button class="title" type="button">okkergokker</button>
@@ -210,14 +216,31 @@
   <script>
     const title = document.querySelector('.title');
     const hero = document.querySelector('.hero');
+    const video = document.querySelector('video');
     const asciiArt = document.querySelector('.ascii-art');
     const introText = document.querySelector('.intro-text');
     const playlistContent = document.querySelector('.playlist-content');
     const playlistSection = document.querySelector('.playlist-section');
 
     function scrollToArt() {
+      ensureVideoPlaying();
       window.scrollTo({ top: hero.offsetHeight, behavior: 'smooth' });
     }
+
+    function ensureVideoPlaying() {
+      video.muted = true;
+      video.playsInline = true;
+      if (video.paused) {
+        video.play().catch(() => {});
+      }
+    }
+
+    ensureVideoPlaying();
+    video.addEventListener('loadeddata', ensureVideoPlaying);
+    addEventListener('visibilitychange', () => {
+      if (!document.hidden) ensureVideoPlaying();
+    });
+    addEventListener('touchstart', ensureVideoPlaying, { once: true, passive: true });
 
     function fitContent() {
       const styles = getComputedStyle(playlistSection);
