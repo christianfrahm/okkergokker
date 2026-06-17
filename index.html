@@ -230,35 +230,13 @@
     const playlistContent = document.querySelector('.playlist-content');
     const playlistSection = document.querySelector('.playlist-section');
 
-    function prefersInstantScroll() {
-      return window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches;
-    }
-
-    function scrollToSection(section) {
-      window.scrollTo({
-        top: section.offsetTop,
-        left: 0,
-        behavior: prefersInstantScroll() ? 'auto' : 'smooth'
-      });
-    }
-
     function scrollToArt() {
       ensureVideoPlaying();
-      scrollToSection(playlistSection);
-    }
-
-    function scrollToHero() {
-      scrollToSection(hero);
-    }
-
-    function isOnHero() {
-      return scrollY < playlistSection.offsetTop / 2;
-    }
-
-    function isTypingTarget(element) {
-      if (!element) return false;
-      const tag = element.tagName;
-      return tag === 'INPUT' || tag === 'TEXTAREA' || element.isContentEditable;
+      const instant = window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches;
+      playlistSection.scrollIntoView({
+        behavior: instant ? 'auto' : 'smooth',
+        block: 'start'
+      });
     }
 
     function ensureVideoPlaying() {
@@ -300,18 +278,6 @@
     }
 
     title.addEventListener('click', scrollToArt);
-
-    addEventListener('keydown', (e) => {
-      if (isTypingTarget(document.activeElement)) return;
-
-      if (e.key === 'ArrowDown' && isOnHero()) {
-        e.preventDefault();
-        scrollToArt();
-      } else if (e.key === 'ArrowUp' && !isOnHero()) {
-        e.preventDefault();
-        scrollToHero();
-      }
-    });
 
     fitContent();
     addEventListener('resize', fitContent);
