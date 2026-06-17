@@ -107,11 +107,19 @@
 
     .playlist-content {
       display: grid;
-      grid-template-rows: 1fr auto;
       align-items: center;
       width: 100%;
       height: 100%;
       gap: clamp(0.75rem, 2vh, 1.5rem);
+    }
+
+    .playlist-content.fills-viewport {
+      grid-template-rows: 1fr auto;
+    }
+
+    .playlist-content:not(.fills-viewport) {
+      grid-template-rows: auto auto;
+      align-content: center;
     }
 
     .ascii-art {
@@ -123,18 +131,28 @@
       margin: 0;
       padding: 0;
       border: 0;
-      align-self: end;
       justify-self: center;
       min-height: 0;
+      max-width: 100%;
+    }
+
+    .playlist-content.fills-viewport .ascii-art {
+      align-self: end;
+    }
+
+    .playlist-content:not(.fills-viewport) .ascii-art {
+      align-self: center;
     }
 
     .intro-text {
       color: #fff;
       font-family: "Courier Prime", Courier, monospace;
-      font-size: clamp(0.7rem, 2.2vw, 1rem);
+      font-size: 1rem;
       line-height: 1.5;
       text-align: center;
       width: 100%;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     .intro-text p + p {
@@ -283,6 +301,9 @@
         scale *= availableHeight / asciiArt.offsetHeight;
         asciiArt.style.fontSize = `${baseAsciiSize * scale}px`;
       }
+
+      const totalHeight = asciiArt.offsetHeight + gap + introText.offsetHeight;
+      playlistContent.classList.toggle('fills-viewport', totalHeight >= maxHeight - 1);
     }
 
     title.addEventListener('click', scrollToArt);
