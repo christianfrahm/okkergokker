@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>okkergokker</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap" rel="stylesheet">
@@ -159,6 +163,10 @@
         min-height: 100%;
         max-width: none;
       }
+
+      .intro-text {
+        font-size: clamp(0.65rem, 3.2vw, 0.9rem);
+      }
     }
   </style>
 </head>
@@ -224,7 +232,11 @@
 
     function scrollToArt() {
       ensureVideoPlaying();
-      window.scrollTo({ top: hero.offsetHeight, behavior: 'smooth' });
+      const instant = window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches;
+      playlistSection.scrollIntoView({
+        behavior: instant ? 'auto' : 'smooth',
+        block: 'start'
+      });
     }
 
     function ensureVideoPlaying() {
@@ -253,12 +265,16 @@
 
       asciiArt.style.fontSize = `${baseSize}px`;
       const textHeight = introText.offsetHeight;
-      const availableHeight = Math.max(0, maxHeight - textHeight - gap);
-      const scale = Math.min(
-        maxWidth / asciiArt.scrollWidth,
-        availableHeight / asciiArt.scrollHeight
-      );
+
+      let scale = Math.min(maxWidth / asciiArt.scrollWidth, 1);
       asciiArt.style.fontSize = `${baseSize * scale}px`;
+
+      const totalHeight = asciiArt.offsetHeight + gap + textHeight;
+      if (totalHeight > maxHeight) {
+        const heightScale = (maxHeight - textHeight - gap) / asciiArt.offsetHeight;
+        scale *= heightScale;
+        asciiArt.style.fontSize = `${baseSize * scale}px`;
+      }
     }
 
     title.addEventListener('click', scrollToArt);
