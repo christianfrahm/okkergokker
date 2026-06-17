@@ -230,25 +230,29 @@
     const playlistContent = document.querySelector('.playlist-content');
     const playlistSection = document.querySelector('.playlist-section');
 
+    function prefersInstantScroll() {
+      return window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches;
+    }
+
+    function scrollToSection(section) {
+      window.scrollTo({
+        top: section.offsetTop,
+        left: 0,
+        behavior: prefersInstantScroll() ? 'auto' : 'smooth'
+      });
+    }
+
     function scrollToArt() {
       ensureVideoPlaying();
-      const instant = window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches;
-      playlistSection.scrollIntoView({
-        behavior: instant ? 'auto' : 'smooth',
-        block: 'start'
-      });
+      scrollToSection(playlistSection);
     }
 
     function scrollToHero() {
-      const instant = window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches;
-      hero.scrollIntoView({
-        behavior: instant ? 'auto' : 'smooth',
-        block: 'start'
-      });
+      scrollToSection(hero);
     }
 
     function isOnHero() {
-      return scrollY < window.innerHeight / 2;
+      return scrollY < playlistSection.offsetTop / 2;
     }
 
     function isTypingTarget(element) {
