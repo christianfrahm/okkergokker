@@ -96,8 +96,6 @@
 
     .playlist-section {
       display: flex;
-      justify-content: center;
-      align-items: center;
       width: 100%;
       height: 100dvh;
       padding: 0.5rem;
@@ -108,25 +106,25 @@
     }
 
     .playlist-content {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-rows: 1fr auto;
       align-items: center;
-      justify-content: center;
       width: 100%;
-      max-height: 100%;
+      height: 100%;
       gap: clamp(0.75rem, 2vh, 1.5rem);
     }
 
     .ascii-art {
       color: #fff;
       font-family: Consolas, "Courier New", Courier, monospace;
-      line-height: 1;
+      line-height: 1.15;
       white-space: pre;
       text-align: left;
       margin: 0;
       padding: 0;
       border: 0;
-      flex-shrink: 1;
+      align-self: end;
+      justify-self: center;
       min-height: 0;
     }
 
@@ -136,9 +134,7 @@
       font-size: clamp(0.7rem, 2.2vw, 1rem);
       line-height: 1.5;
       text-align: center;
-      flex-shrink: 0;
-      max-width: 36rem;
-      padding: 0 0.5rem;
+      width: 100%;
     }
 
     .intro-text p + p {
@@ -161,10 +157,6 @@
         min-width: 100%;
         min-height: 100%;
         max-width: none;
-      }
-
-      .intro-text {
-        font-size: clamp(0.65rem, 3.2vw, 0.9rem);
       }
     }
   </style>
@@ -278,19 +270,18 @@
       const gap = parseFloat(getComputedStyle(playlistContent).gap) || 0;
       const maxWidth = playlistSection.clientWidth - paddingX;
       const maxHeight = playlistSection.clientHeight - paddingY;
-      const baseSize = 16;
+      const baseAsciiSize = 16;
 
-      asciiArt.style.fontSize = `${baseSize}px`;
+      asciiArt.style.fontSize = `${baseAsciiSize}px`;
       const textHeight = introText.offsetHeight;
+      const availableHeight = Math.max(0, maxHeight - textHeight - gap);
 
-      let scale = Math.min(maxWidth / asciiArt.scrollWidth, 1);
-      asciiArt.style.fontSize = `${baseSize * scale}px`;
+      let scale = maxWidth / asciiArt.scrollWidth;
+      asciiArt.style.fontSize = `${baseAsciiSize * scale}px`;
 
-      const totalHeight = asciiArt.offsetHeight + gap + textHeight;
-      if (totalHeight > maxHeight) {
-        const heightScale = (maxHeight - textHeight - gap) / asciiArt.offsetHeight;
-        scale *= heightScale;
-        asciiArt.style.fontSize = `${baseSize * scale}px`;
+      if (asciiArt.offsetHeight > availableHeight) {
+        scale *= availableHeight / asciiArt.offsetHeight;
+        asciiArt.style.fontSize = `${baseAsciiSize * scale}px`;
       }
     }
 
