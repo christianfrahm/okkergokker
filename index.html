@@ -30,16 +30,19 @@
 
     html {
       scroll-behavior: smooth;
-      scroll-snap-type: y mandatory;
       background: #000;
-      overflow-x: hidden;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
       -webkit-text-size-adjust: none;
       text-size-adjust: none;
     }
 
     body {
       background: #000;
-      overflow-x: hidden;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
     }
 
     .hero {
@@ -56,13 +59,22 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 100%;
+      display: block;
+      width: auto;
       height: 100%;
       object-fit: cover;
       object-position: center center;
       transform: translate(-50%, -50%);
       pointer-events: none;
       z-index: 0;
+    }
+
+    /* The source is 16:9 with a 4:3 picture pillarboxed inside it.
+       Size from the visible picture so its encoded black bars stay off-screen. */
+    @media (min-aspect-ratio: 4 / 3) {
+      video {
+        height: 75vw;
+      }
     }
 
     video::-webkit-media-controls,
@@ -175,6 +187,7 @@
       width: 100%;
       height: 100%;
       color: #fff;
+      cursor: url("revolver-link-select.cur"), auto;
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
@@ -185,40 +198,6 @@
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-    }
-
-    .lasso {
-      flex: 0 0 auto;
-      display: block;
-      padding: 0;
-      margin: 0;
-      border: 0;
-      background: none;
-      cursor: pointer;
-      color: #fff;
-      width: clamp(28px, 7vw, 56px);
-      height: clamp(28px, 7vw, 56px);
-      line-height: 0;
-      transform-origin: center;
-      transition: transform 0.25s ease, opacity 0.25s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .lasso img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .lasso:hover,
-    .lasso:focus-visible {
-      transform: scale(1.35);
-      outline: none;
-    }
-
-    .lasso:active {
-      transform: scale(1.2);
     }
 
     .intro-text {
@@ -260,24 +239,6 @@
         width: 100%;
       }
 
-      .lasso {
-        width: 40px;
-        height: 40px;
-      }
-
-      .lasso:hover,
-      .lasso:focus-visible,
-      .lasso:active {
-        transform: none;
-      }
-
-      video {
-        width: auto;
-        height: 100%;
-        min-width: 100%;
-        min-height: 100%;
-        max-width: none;
-      }
     }
   </style>
 </head>
@@ -328,9 +289,6 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
       <canvas class="horse-canvas" aria-hidden="true"></canvas>
     </div>
-    <button class="lasso" type="button" aria-label="Forvandl cowboyen til en galopperende hest" aria-pressed="false" title="Galopperende hest">
-      <img src="lasso.png" alt="" aria-hidden="true">
-    </button>
     </div>
     <div class="intro-text">
       <p>Independent website developer patrolling Copenhagen.</p>
@@ -350,11 +308,11 @@
     const playlistSection = document.querySelector('.playlist-section');
     const artRow = document.querySelector('.art-row');
     const asciiStack = document.querySelector('.ascii-stack');
-    const lasso = document.querySelector('.lasso');
     const horseCanvas = document.querySelector('.horse-canvas');
 
     let lockedWidth = window.innerWidth;
     let horseOn = false;
+    let horseTimer = 0;
 
     function lockSectionHeight() {
       document.documentElement.style.setProperty('--section-height', `${window.innerHeight}px`);
@@ -380,24 +338,8 @@
         behavior: instant ? 'auto' : 'smooth',
         block: 'start'
       });
-    }
-
-    function scrollToHero() {
-      const instant = window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches;
-      hero.scrollIntoView({
-        behavior: instant ? 'auto' : 'smooth',
-        block: 'start'
-      });
-    }
-
-    function isOnHero() {
-      return scrollY < window.innerHeight / 2;
-    }
-
-    function isTypingTarget(element) {
-      if (!element) return false;
-      const tag = element.tagName;
-      return tag === 'INPUT' || tag === 'TEXTAREA' || element.isContentEditable;
+      clearTimeout(horseTimer);
+      horseTimer = setTimeout(activateHorse, 3000);
     }
 
     function ensureVideoPlaying() {
@@ -420,18 +362,14 @@
       const paddingX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
       const paddingY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
       const gap = parseFloat(getComputedStyle(playlistContent).gap) || 0;
-      const artRowGap = parseFloat(getComputedStyle(artRow).gap) || 0;
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
-      const lassoReserveHeight = isMobile
-        ? lasso.offsetHeight + artRowGap
-        : lasso.offsetHeight * 1.35 + artRowGap;
       const maxWidth = playlistSection.clientWidth - paddingX;
       const maxHeight = playlistSection.clientHeight - paddingY;
       const baseAsciiSize = 16;
 
       asciiArt.style.fontSize = `${baseAsciiSize}px`;
       const textHeight = introText.offsetHeight;
-      const availableHeight = Math.max(0, maxHeight - textHeight - gap - lassoReserveHeight);
+      const availableHeight = Math.max(0, maxHeight - textHeight - gap);
 
       let scale = maxWidth / asciiArt.scrollWidth;
       asciiArt.style.fontSize = `${baseAsciiSize * scale}px`;
@@ -452,18 +390,6 @@
     }
 
     title.addEventListener('click', scrollToArt);
-
-    addEventListener('keydown', (e) => {
-      if (isTypingTarget(document.activeElement)) return;
-
-      if (e.key === 'ArrowDown' && isOnHero()) {
-        e.preventDefault();
-        scrollToArt();
-      } else if (e.key === 'ArrowUp' && !isOnHero()) {
-        e.preventDefault();
-        scrollToHero();
-      }
-    });
 
     // ---- Galloping-horse ASCII animation (ported from lunar-horse.webflow.io) ----
     // Renders a sequence of horse silhouette frames as live ASCII on the canvas.
@@ -826,27 +752,13 @@
       return { start, stop, fadeOut, syncLayout, clearLayout };
     })();
 
-    lasso.addEventListener('click', () => {
-      if (!horseOn && artRow.classList.contains('horse-active')) return;
-
-      if (horseOn) {
-        horseOn = false;
-        lasso.setAttribute('aria-pressed', 'false');
-        artRow.classList.remove('cowboy-hidden');
-        horse.fadeOut(() => {
-          artRow.classList.remove('horse-active');
-          horse.clearLayout();
-          fitContent();
-        });
-        return;
-      }
-
+    function activateHorse() {
+      if (horseOn) return;
       horseOn = true;
       artRow.classList.add('horse-active', 'cowboy-hidden');
-      lasso.setAttribute('aria-pressed', 'true');
       horse.syncLayout();
       horse.start();
-    });
+    }
 
     lockSectionHeight();
     fitContent();
