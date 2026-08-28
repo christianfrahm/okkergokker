@@ -237,6 +237,16 @@
       .playlist-content .art-row {
         width: 100%;
       }
+
+      /* Make section 2 taller than the viewport by the scroll buffer and pad
+         its top by the same amount. This gives the tap enough room to scroll
+         the buffer past section 1 (hiding the hero video), while the padding
+         pushes the centered text + animation down so they stay centered in the
+         visible area instead of riding up. */
+      .playlist-section {
+        height: calc(100lvh + var(--scroll-buffer, 0px));
+        padding-top: calc(0.5rem + var(--scroll-buffer, 0px));
+      }
     }
   </style>
 </head>
@@ -312,6 +322,13 @@
     let horseOn = false;
     let horseTimer = 0;
 
+    // Extra pixels we scroll past the second section's top on mobile, so the
+    // hero video can't peek through the seam when Safari's address bar retracts.
+    // The content is shifted down by the same amount (via --scroll-buffer in the
+    // mobile CSS) so text + animation stay centered in the visible area.
+    const SCROLL_BUFFER_PX = 100;
+    document.documentElement.style.setProperty('--scroll-buffer', `${SCROLL_BUFFER_PX}px`);
+
     function onLayoutChange() {
       lockedWidth = window.innerWidth;
       fitContent();
@@ -328,9 +345,7 @@
       ensureVideoPlaying();
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const instant = isMobile || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      // On mobile, scroll 60px past the section top as a buffer so the address
-      // bar collapsing can't leave a strip of the hero video peeking at the top.
-      const buffer = isMobile ? 60 : 0;
+      const buffer = isMobile ? SCROLL_BUFFER_PX : 0;
       const top = playlistSection.getBoundingClientRect().top + window.scrollY + buffer;
       window.scrollTo({ top, behavior: instant ? 'auto' : 'smooth' });
       clearTimeout(horseTimer);
