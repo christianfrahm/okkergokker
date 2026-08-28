@@ -326,11 +326,13 @@
 
     function scrollToArt() {
       ensureVideoPlaying();
-      const instant = window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches;
-      playlistSection.scrollIntoView({
-        behavior: instant ? 'auto' : 'smooth',
-        block: 'start'
-      });
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const instant = isMobile || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // On mobile, scroll 60px past the section top as a buffer so the address
+      // bar collapsing can't leave a strip of the hero video peeking at the top.
+      const buffer = isMobile ? 60 : 0;
+      const top = playlistSection.getBoundingClientRect().top + window.scrollY + buffer;
+      window.scrollTo({ top, behavior: instant ? 'auto' : 'smooth' });
       clearTimeout(horseTimer);
       horseTimer = setTimeout(activateHorse, 3000);
     }
