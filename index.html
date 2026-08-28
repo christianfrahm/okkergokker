@@ -136,14 +136,89 @@
       justify-self: center;
       min-height: 0;
       max-width: 100%;
+      opacity: 1;
+      transition: opacity 1.4s ease;
     }
 
-    .playlist-content.fills-viewport .ascii-art {
+    .art-row.cowboy-hidden .ascii-art {
+      opacity: 0;
+    }
+
+    .playlist-content.fills-viewport .art-row {
       align-self: end;
     }
 
-    .playlist-content:not(.fills-viewport) .ascii-art {
+    .playlist-content:not(.fills-viewport) .art-row {
       align-self: center;
+    }
+
+    .art-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(8px, 2vh, 16px);
+      justify-self: center;
+      min-height: 0;
+      max-width: 100%;
+    }
+
+    .ascii-stack {
+      position: relative;
+      display: inline-block;
+      min-height: 0;
+    }
+
+    .horse-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      color: #fff;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .art-row.horse-active .horse-canvas {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .lasso {
+      flex: 0 0 auto;
+      display: block;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
+      color: #fff;
+      width: clamp(28px, 7vw, 56px);
+      height: clamp(28px, 7vw, 56px);
+      line-height: 0;
+      transform-origin: center;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lasso svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+
+    .lasso:hover,
+    .lasso:focus-visible {
+      transform: scale(1.35);
+      outline: none;
+    }
+
+    .lasso:active {
+      transform: scale(1.2);
     }
 
     .intro-text {
@@ -175,6 +250,15 @@
     }
 
     @media (max-width: 768px) {
+      .playlist-content {
+        grid-template-rows: 1fr auto;
+        align-content: stretch;
+      }
+
+      .playlist-content .art-row {
+        align-self: end;
+      }
+
       video {
         width: auto;
         height: 100%;
@@ -195,6 +279,8 @@
 
   <section class="playlist-section">
     <div class="playlist-content">
+    <div class="art-row">
+    <div class="ascii-stack">
     <pre class="ascii-art">⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣠⣤⣴⣶⣶⣶⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⡴⠞⠛⣋⣭⣤⣤⣄⡀⠀⠀⢸⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⡀⠀⣠⡴⠾⠋⠁⠀⠐⠛⠋⠉⠛⣿⣿⡇⠀⠀⢸⡏⢻⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -228,6 +314,12 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⡇⠀⠀⠻⣆⠀⣼⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⠄⠀⠀⠙⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
+      <canvas class="horse-canvas" aria-hidden="true"></canvas>
+    </div>
+    <button class="lasso" type="button" aria-label="Forvandl cowboyen til en galopperende hest" aria-pressed="false" title="Kast lassoen">
+      <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M 3.8594 25.2344 C 3.8594 35.9922 13.0938 42.0391 24.6251 42.0391 C 25.5157 42.0391 26.4297 41.9922 27.3438 41.9453 C 28.3047 42.3438 29.4531 42.5781 30.7422 42.5781 C 34.2578 42.5781 37.8204 41.5938 40.9844 39.9063 C 41.0547 40.2578 41.0782 40.6328 41.0782 41.0078 C 41.0782 43.8203 39.4844 46.5625 36.8594 48.2266 C 36.1797 48.7188 35.6875 49.2110 35.6875 50.0547 C 35.6875 50.9219 36.3907 51.6719 37.4922 51.6719 C 38.0078 51.6719 38.3126 51.5312 38.7578 51.25 C 42.3672 48.9063 44.5938 44.9922 44.5938 40.9375 C 44.5938 39.8594 44.4531 38.8516 44.1719 37.8906 C 48.8828 34.3047 52.1406 29.0312 52.1406 23.2422 C 52.1406 12.0859 42.2031 4.3281 30.3204 4.3281 C 17.3126 4.3281 3.8594 12.8594 3.8594 25.2344 Z M 7.3985 25.2578 C 7.3985 15.0391 19.1172 7.8672 30.3438 7.8672 C 40.1641 7.8672 48.6251 13.9610 48.6251 23.2188 C 48.6251 27.6484 46.1407 31.7500 42.5313 34.6797 C 40.5626 32.0781 37.3751 30.4375 33.6953 30.4375 C 28.3282 30.4375 24.2735 33.25 24.2735 37.3984 C 24.2735 37.7969 24.3204 38.1719 24.4141 38.5234 C 15.0626 38.4063 7.3985 34 7.3985 25.2578 Z M 27.8360 37.2813 C 27.8360 35.3125 30.5782 34 33.9766 34 C 36.3204 34 38.3360 35.0078 39.6251 36.6484 C 36.8829 38.1719 33.7657 39.0625 30.7422 39.0625 C 29.0547 39.0625 27.8360 38.4063 27.8360 37.2813 Z"/></svg>
+    </button>
+    </div>
     <div class="intro-text">
       <p>Independent website developer patrolling Copenhagen.</p>
       <p>Unlike cowboys, I use modern technology to build, host and maintain small websites efficiently and affordably.</p>
@@ -244,8 +336,13 @@
     const introText = document.querySelector('.intro-text');
     const playlistContent = document.querySelector('.playlist-content');
     const playlistSection = document.querySelector('.playlist-section');
+    const artRow = document.querySelector('.art-row');
+    const asciiStack = document.querySelector('.ascii-stack');
+    const lasso = document.querySelector('.lasso');
+    const horseCanvas = document.querySelector('.horse-canvas');
 
     let lockedWidth = window.innerWidth;
+    let horseOn = false;
 
     function lockSectionHeight() {
       document.documentElement.style.setProperty('--section-height', `${window.innerHeight}px`);
@@ -311,13 +408,15 @@
       const paddingX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
       const paddingY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
       const gap = parseFloat(getComputedStyle(playlistContent).gap) || 0;
+      const artRowGap = parseFloat(getComputedStyle(artRow).gap) || 0;
+      const lassoReserveHeight = lasso.offsetHeight * 1.35 + artRowGap;
       const maxWidth = playlistSection.clientWidth - paddingX;
       const maxHeight = playlistSection.clientHeight - paddingY;
       const baseAsciiSize = 16;
 
       asciiArt.style.fontSize = `${baseAsciiSize}px`;
       const textHeight = introText.offsetHeight;
-      const availableHeight = Math.max(0, maxHeight - textHeight - gap);
+      const availableHeight = Math.max(0, maxHeight - textHeight - gap - lassoReserveHeight);
 
       let scale = maxWidth / asciiArt.scrollWidth;
       asciiArt.style.fontSize = `${baseAsciiSize * scale}px`;
@@ -327,8 +426,15 @@
         asciiArt.style.fontSize = `${baseAsciiSize * scale}px`;
       }
 
-      const totalHeight = asciiArt.offsetHeight + gap + introText.offsetHeight;
-      playlistContent.classList.toggle('fills-viewport', totalHeight >= maxHeight - 1);
+      const totalHeight = artRow.offsetHeight + gap + introText.offsetHeight;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      if (isMobile) {
+        playlistContent.classList.add('fills-viewport');
+      } else {
+        playlistContent.classList.toggle('fills-viewport', totalHeight >= maxHeight - 1);
+      }
+
+      if (horseOn || artRow.classList.contains('horse-active')) horse.syncLayout();
     }
 
     title.addEventListener('click', scrollToArt);
@@ -343,6 +449,388 @@
         e.preventDefault();
         scrollToHero();
       }
+    });
+
+    // ---- Galloping-horse ASCII animation (ported from lunar-horse.webflow.io) ----
+    // Renders a sequence of horse silhouette frames as live ASCII on the canvas.
+    // White glyphs on transparent background; cursor "repels" the glyphs on hover.
+    const horse = (() => {
+      const canvas = horseCanvas;
+      const ctx = canvas.getContext('2d', { alpha: true });
+
+      const FPS = 12;
+      const FRAME_MS = 1000 / FPS;
+      const RAMP = " .'`^,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
+      const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+      const REPEL_RADIUS = 110;
+      const REPEL_STRENGTH = 0.3;
+      const APPEAR_FADE_MS = 150;
+      const APPEAR_GAP_MS = 1250;
+      const EDGE_BOOST = 1.65;
+      const EDGE_WEIGHT = 0.75;
+      const EDGE_THRESH = 2;
+
+      const urls = Array.from({ length: 11 }, (_, i) =>
+        `horse-frames/frame-${String(i + 1).padStart(2, '0')}.webp`);
+
+      const off = document.createElement('canvas');
+      const offCtx = off.getContext('2d', { willReadFrequently: true });
+
+      let frames = [];
+      let frameIndex = 0;
+      let cols = 96;
+      let rows = 72;
+      let cellW = 1;
+      let cellH = 1;
+      let fontSize = 8;
+      let asciiColor = '#fff';
+
+      let mouseX = -9999;
+      let mouseY = -9999;
+      let isHovering = false;
+
+      let appearDelay = null;
+      let introStartTime = 0;
+      let outroMode = false;
+      let outroStartTime = 0;
+      let onStopComplete = null;
+
+      let running = false;
+      let wantRun = false;
+      let ready = false;
+      let rafId = 0;
+      let last = 0;
+
+      let dataCache = null;
+      let dataKey = '';
+
+      const luminance = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const clamp01 = (t) => Math.max(0, Math.min(1, t));
+
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = (e.clientX - rect.left) * DPR;
+        mouseY = (e.clientY - rect.top) * DPR;
+        isHovering = true;
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        isHovering = false;
+        mouseX = -9999;
+        mouseY = -9999;
+      });
+
+      function buildAppearDelays() {
+        const n = cols * rows;
+        appearDelay = new Float32Array(n);
+        for (let i = 0; i < n; i++) {
+          appearDelay[i] = Math.random() * APPEAR_GAP_MS;
+        }
+      }
+
+      function cellAlpha(elapsedMs, idx) {
+        const t = elapsedMs - appearDelay[idx];
+        if (t <= 0) return 0;
+        return clamp01(t / APPEAR_FADE_MS);
+      }
+
+      function cellOutroAlpha(outroElapsed, idx) {
+        const disappearDelay = APPEAR_GAP_MS - appearDelay[idx];
+        const t = outroElapsed - disappearDelay;
+        if (t <= 0) return 1;
+        return clamp01(1 - t / APPEAR_FADE_MS);
+      }
+
+      function getLAt(data, x, y) {
+        const ix = Math.max(0, Math.min(cols - 1, x));
+        const iy = Math.max(0, Math.min(rows - 1, y));
+        const j = (iy * cols + ix) * 4;
+        return luminance(data[j], data[j + 1], data[j + 2]);
+      }
+
+      // Square cells derived from the actual canvas box, so the landscape horse
+      // is not distorted inside the portrait area the cowboy occupies.
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width < 10 || rect.height < 10) return;
+
+        const w = Math.floor(rect.width * DPR);
+        const h = Math.floor(rect.height * DPR);
+
+        // Only touch canvas.width/height when they actually change: assigning
+        // either reallocates and clears the whole bitmap, so skipping it every
+        // steady-state tick avoids megabytes of needless work per frame.
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+
+          const cell = 4.5 * DPR;
+          cols = Math.max(48, Math.min(200, Math.round(canvas.width / cell)));
+          cellW = canvas.width / cols;
+          rows = Math.max(1, Math.round(canvas.height / cellW));
+          cellH = canvas.height / rows;
+
+          fontSize = Math.max(6, Math.min(18, Math.round(Math.min(cellW, cellH) * 1.45)));
+
+          // Assigning canvas.width/height resets the 2D context, so re-apply state.
+          ctx.textBaseline = 'top';
+          ctx.font = `${fontSize}px "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+          ctx.imageSmoothingEnabled = false;
+        }
+
+        asciiColor = getComputedStyle(canvas).color || '#fff';
+      }
+
+      function loadImages() {
+        return Promise.all(
+          urls.map((src) => new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = src;
+          }))
+        ).then((imgs) => imgs.filter(Boolean));
+      }
+
+      function drawFrameToOffscreen(img) {
+        off.width = cols;
+        off.height = rows;
+
+        const iw = img.naturalWidth || img.width;
+        const ih = img.naturalHeight || img.height;
+
+        const sFillH = rows / ih;
+        const dwFillH = iw * sFillH;
+        let dw;
+        let dh;
+        let dx;
+        let dy;
+
+        if (dwFillH <= cols) {
+          dw = dwFillH;
+          dh = rows;
+          dx = Math.round((cols - dw) / 2);
+          dy = 0;
+        } else {
+          const s = Math.min(cols / iw, rows / ih);
+          dw = iw * s;
+          dh = ih * s;
+          dx = Math.round((cols - dw) / 2);
+          dy = Math.round((rows - dh) / 2);
+        }
+
+        offCtx.clearRect(0, 0, cols, rows);
+        offCtx.imageSmoothingEnabled = true;
+        offCtx.drawImage(img, dx, dy, dw, dh);
+      }
+
+      // The rasterised frame only changes when the frame index or grid size
+      // changes, so cache it instead of recomputing getImageData every tick.
+      function prepareData() {
+        const key = frameIndex + ':' + cols + ':' + rows;
+        if (key === dataKey && dataCache) return;
+        const img = frames[frameIndex];
+        if (!img) return;
+        drawFrameToOffscreen(img);
+        try {
+          dataCache = offCtx.getImageData(0, 0, cols, rows).data;
+          dataKey = key;
+        } catch (e) {
+          dataCache = null;
+        }
+      }
+
+      function renderGlyphs(nowMs) {
+        const data = dataCache;
+        if (!data) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = asciiColor;
+
+        const rampLen = RAMP.length - 1;
+        const introElapsed = nowMs - introStartTime;
+        const outroElapsed = nowMs - outroStartTime;
+
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            const px = Math.round(x * cellW);
+            const py = Math.round(y * cellH);
+
+            let sx = x;
+            let sy = y;
+
+            if (isHovering) {
+              const dx = px - mouseX;
+              const dy = py - mouseY;
+              const d2 = dx * dx + dy * dy;
+
+              if (d2 > 1 && d2 < REPEL_RADIUS * REPEL_RADIUS) {
+                const d = Math.sqrt(d2);
+                const f = (1 - d / REPEL_RADIUS) * REPEL_STRENGTH;
+                sx += (dx / d) * f * cols;
+                sy += (dy / d) * f * rows;
+              }
+            }
+
+            sx = Math.max(0, Math.min(cols - 1, Math.round(sx)));
+            sy = Math.max(0, Math.min(rows - 1, Math.round(sy)));
+
+            const i = (sy * cols + sx) * 4;
+            if (data[i + 3] < 20) continue;
+
+            let L = luminance(data[i], data[i + 1], data[i + 2]);
+            L = Math.max(0, Math.min(255, (L - 128) * 1.05 + 128));
+
+            const Lx1 = getLAt(data, sx - 1, sy);
+            const Lx2 = getLAt(data, sx + 1, sy);
+            const Ly1 = getLAt(data, sx, sy - 1);
+            const Ly2 = getLAt(data, sx, sy + 1);
+
+            let edge = Math.abs(Lx2 - Lx1) + Math.abs(Ly2 - Ly1);
+            edge = Math.max(0, edge - EDGE_THRESH);
+            edge = Math.min(255, edge * EDGE_BOOST);
+
+            let tShade = 1 - L / 255;
+            tShade = clamp01(tShade - (edge / 255) * EDGE_WEIGHT);
+
+            const ch = RAMP[Math.round(tShade * rampLen)];
+
+            const idx = y * cols + x;
+            const a = outroMode
+              ? cellOutroAlpha(outroElapsed, idx)
+              : cellAlpha(introElapsed, idx);
+            if (a <= 0) continue;
+
+            ctx.globalAlpha = a;
+            ctx.fillText(ch, px, py);
+            ctx.globalAlpha = 1;
+          }
+        }
+      }
+
+      function loop(now) {
+        if (!running) return;
+
+        const prevCols = cols;
+        const prevRows = rows;
+        resize();
+        if (cols !== prevCols || rows !== prevRows) {
+          buildAppearDelays();
+          dataKey = '';
+        }
+
+        const dt = now - last;
+        if (dt >= FRAME_MS) {
+          frameIndex = (frameIndex + Math.floor(dt / FRAME_MS)) % frames.length;
+          last += Math.floor(dt / FRAME_MS) * FRAME_MS;
+        }
+
+        prepareData();
+        renderGlyphs(now);
+
+        if (outroMode && now - outroStartTime >= APPEAR_GAP_MS + APPEAR_FADE_MS) {
+          finishStop();
+          return;
+        }
+
+        rafId = requestAnimationFrame(loop);
+      }
+
+      function finishStop() {
+        running = false;
+        outroMode = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = 0;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const done = onStopComplete;
+        onStopComplete = null;
+        done?.();
+      }
+
+      function syncLayout() {
+        if (!ready || !frames[0]) return;
+
+        const h = asciiArt.offsetHeight;
+        const iw = frames[0].naturalWidth;
+        const ih = frames[0].naturalHeight;
+        const styles = getComputedStyle(playlistSection);
+        const paddingX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+        const maxW = playlistSection.clientWidth - paddingX;
+        const idealW = h * (iw / ih);
+        const w = Math.min(idealW, maxW);
+
+        asciiStack.style.width = `${w}px`;
+        asciiStack.style.height = `${h}px`;
+        dataKey = '';
+      }
+
+      function clearLayout() {
+        asciiStack.style.width = '';
+        asciiStack.style.height = '';
+      }
+
+      function start() {
+        wantRun = true;
+        if (!ready || running) return;
+        outroMode = false;
+        onStopComplete = null;
+        syncLayout();
+        running = true;
+        resize();
+        buildAppearDelays();
+        frameIndex = 0;
+        dataKey = '';
+        introStartTime = performance.now();
+        last = performance.now();
+        rafId = requestAnimationFrame(loop);
+      }
+
+      function fadeOut(onComplete) {
+        wantRun = false;
+        if (!running) {
+          onComplete?.();
+          return;
+        }
+        outroMode = true;
+        outroStartTime = performance.now();
+        onStopComplete = onComplete;
+      }
+
+      function stop() {
+        wantRun = false;
+        finishStop();
+      }
+
+      loadImages().then((loaded) => {
+        frames = loaded;
+        ready = frames.length > 0;
+        if (wantRun) start();
+      });
+
+      return { start, stop, fadeOut, syncLayout, clearLayout };
+    })();
+
+    lasso.addEventListener('click', () => {
+      if (!horseOn && artRow.classList.contains('horse-active')) return;
+
+      if (horseOn) {
+        horseOn = false;
+        lasso.setAttribute('aria-pressed', 'false');
+        artRow.classList.remove('cowboy-hidden');
+        horse.fadeOut(() => {
+          artRow.classList.remove('horse-active');
+          horse.clearLayout();
+          fitContent();
+        });
+        return;
+      }
+
+      horseOn = true;
+      artRow.classList.add('horse-active', 'cowboy-hidden');
+      lasso.setAttribute('aria-pressed', 'true');
+      horse.syncLayout();
+      horse.start();
     });
 
     lockSectionHeight();
