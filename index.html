@@ -48,7 +48,11 @@
     .hero {
       position: relative;
       width: 100%;
-      height: var(--section-height, 100svh);
+      /* Size to the LARGE viewport so the section always covers the screen even
+         when Safari's address bar retracts — otherwise a strip of the next
+         section shows through the seam. Fallback to 100vh for old browsers. */
+      height: 100vh;
+      height: 100lvh;
       background: #000;
       overflow: hidden;
       scroll-snap-align: start;
@@ -111,7 +115,8 @@
     .playlist-section {
       display: flex;
       width: 100%;
-      height: var(--section-height, 100svh);
+      height: 100vh;
+      height: 100lvh;
       padding: 0.5rem;
       background: #000;
       overflow: hidden;
@@ -229,16 +234,9 @@
     }
 
     @media (max-width: 768px) {
-      .playlist-content {
-        grid-template-rows: 1fr auto;
-        align-content: stretch;
-      }
-
       .playlist-content .art-row {
-        align-self: end;
         width: 100%;
       }
-
     }
   </style>
 </head>
@@ -314,13 +312,8 @@
     let horseOn = false;
     let horseTimer = 0;
 
-    function lockSectionHeight() {
-      document.documentElement.style.setProperty('--section-height', `${window.innerHeight}px`);
-    }
-
     function onLayoutChange() {
       lockedWidth = window.innerWidth;
-      lockSectionHeight();
       fitContent();
     }
 
@@ -362,7 +355,6 @@
       const paddingX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
       const paddingY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
       const gap = parseFloat(getComputedStyle(playlistContent).gap) || 0;
-      const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const maxWidth = playlistSection.clientWidth - paddingX;
       const maxHeight = playlistSection.clientHeight - paddingY;
       const baseAsciiSize = 16;
@@ -380,11 +372,7 @@
       }
 
       const totalHeight = artRow.offsetHeight + gap + introText.offsetHeight;
-      if (isMobile) {
-        playlistContent.classList.add('fills-viewport');
-      } else {
-        playlistContent.classList.toggle('fills-viewport', totalHeight >= maxHeight - 1);
-      }
+      playlistContent.classList.toggle('fills-viewport', totalHeight >= maxHeight - 1);
 
       if (horseOn || artRow.classList.contains('horse-active')) horse.syncLayout();
     }
@@ -760,7 +748,6 @@
       horse.start();
     }
 
-    lockSectionHeight();
     fitContent();
     addEventListener('resize', onResize);
     addEventListener('orientationchange', () => {
