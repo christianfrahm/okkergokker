@@ -59,7 +59,7 @@
       scroll-snap-stop: always;
     }
 
-    .hero-media {
+    video {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -73,16 +73,18 @@
       z-index: 0;
     }
 
-    .hero-webp {
-      display: none;
-    }
-
     /* The source is 16:9 with a 4:3 picture pillarboxed inside it.
        Size from the visible picture so its encoded black bars stay off-screen. */
     @media (min-aspect-ratio: 4 / 3) {
-      .hero-media {
+      video {
         height: 75vw;
       }
+    }
+
+    video::-webkit-media-controls,
+    video::-webkit-media-controls-start-playback-button {
+      display: none !important;
+      -webkit-appearance: none;
     }
 
     .title {
@@ -232,14 +234,6 @@
     }
 
     @media (max-width: 768px) {
-      .hero-video {
-        display: none;
-      }
-
-      .hero-webp {
-        display: block;
-      }
-
       .playlist-content .art-row {
         width: 100%;
       }
@@ -258,8 +252,9 @@
 </head>
 <body>
   <section class="hero">
-    <video class="hero-media hero-video" autoplay loop muted playsinline preload="auto" disablepictureinpicture></video>
-    <img class="hero-media hero-webp" src="hero.webp" alt="" aria-hidden="true" decoding="async">
+    <video autoplay loop muted playsinline webkit-playsinline preload="auto" disablepictureinpicture>
+      <source src="video.mp4" type="video/mp4">
+    </video>
     <button class="title" type="button">okkergokker</button>
   </section>
 
@@ -314,7 +309,7 @@
   <script>
     const title = document.querySelector('.title');
     const hero = document.querySelector('.hero');
-    const desktopVideo = document.querySelector('.hero-video');
+    const video = document.querySelector('video');
     const asciiArt = document.querySelector('.ascii-art');
     const introText = document.querySelector('.intro-text');
     const playlistContent = document.querySelector('.playlist-content');
@@ -336,7 +331,6 @@
 
     function onLayoutChange() {
       lockedWidth = window.innerWidth;
-      ensureDesktopVideoPlaying();
       fitContent();
     }
 
@@ -348,6 +342,7 @@
     }
 
     function scrollToArt() {
+      ensureVideoPlaying();
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const instant = isMobile || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const buffer = isMobile ? SCROLL_BUFFER_PX : 0;
@@ -357,30 +352,20 @@
       horseTimer = setTimeout(activateHorse, 3000);
     }
 
-    function ensureDesktopVideoPlaying() {
-      if (!window.matchMedia('(min-width: 769px)').matches) {
-        if (desktopVideo.hasAttribute('src')) {
-          desktopVideo.pause();
-          desktopVideo.removeAttribute('src');
-          desktopVideo.load();
-        }
-        return;
+    function ensureVideoPlaying() {
+      video.muted = true;
+      video.playsInline = true;
+      if (video.paused) {
+        video.play().catch(() => {});
       }
-
-      if (!desktopVideo.hasAttribute('src')) {
-        desktopVideo.src = 'video.mp4';
-        desktopVideo.load();
-      }
-
-      if (!desktopVideo.paused) return;
-      desktopVideo.play().catch(() => {});
     }
 
-    ensureDesktopVideoPlaying();
-    desktopVideo.addEventListener('loadeddata', ensureDesktopVideoPlaying);
+    ensureVideoPlaying();
+    video.addEventListener('loadeddata', ensureVideoPlaying);
     addEventListener('visibilitychange', () => {
-      if (!document.hidden) ensureDesktopVideoPlaying();
+      if (!document.hidden) ensureVideoPlaying();
     });
+    addEventListener('touchstart', ensureVideoPlaying, { once: true, passive: true });
 
     function fitContent() {
       const styles = getComputedStyle(playlistSection);
