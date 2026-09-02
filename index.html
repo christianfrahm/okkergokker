@@ -321,6 +321,7 @@
     let lockedWidth = window.innerWidth;
     let horseOn = false;
     let horseTimer = 0;
+    let autoScrollTimer = 0;
 
     // Extra pixels we scroll past the second section's top on mobile, so the
     // hero video can't peek through the seam when Safari's address bar retracts.
@@ -342,6 +343,7 @@
     }
 
     function scrollToArt() {
+      clearTimeout(autoScrollTimer);
       ensureVideoPlaying();
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const instant = isMobile || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -395,6 +397,7 @@
     }
 
     title.addEventListener('click', scrollToArt);
+    autoScrollTimer = setTimeout(scrollToArt, 5000);
 
     // ---- Galloping-horse ASCII animation (ported from lunar-horse.webflow.io) ----
     // Renders a sequence of horse silhouette frames as live ASCII on the canvas.
