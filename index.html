@@ -322,7 +322,6 @@
     let horseOn = false;
     let horseTimer = 0;
     let autoScrollTimer = 0;
-    let scrollAnimationFrame = 0;
 
     // Extra pixels we scroll past the second section's top on mobile, so the
     // hero video can't peek through the seam when Safari's address bar retracts.
@@ -343,35 +342,14 @@
       onLayoutChange();
     }
 
-    function animateScrollTo(top, duration) {
-      cancelAnimationFrame(scrollAnimationFrame);
-      const startTop = window.scrollY;
-      const distance = top - startTop;
-      const startTime = performance.now();
-
-      function step(now) {
-        const progress = Math.min(1, (now - startTime) / duration);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        window.scrollTo(0, startTop + distance * eased);
-        if (progress < 1) scrollAnimationFrame = requestAnimationFrame(step);
-      }
-
-      scrollAnimationFrame = requestAnimationFrame(step);
-    }
-
-    function scrollToArt(eventOrOptions = {}) {
+    function scrollToArt() {
       clearTimeout(autoScrollTimer);
       ensureVideoPlaying();
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
-      const automatic = eventOrOptions.automatic === true;
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const instant = isMobile || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const buffer = isMobile ? SCROLL_BUFFER_PX : 0;
       const top = playlistSection.getBoundingClientRect().top + window.scrollY + buffer;
-      if (reducedMotion) {
-        window.scrollTo(0, top);
-      } else {
-        animateScrollTo(top, automatic ? 1200 : 600);
-      }
+      window.scrollTo({ top, behavior: instant ? 'auto' : 'smooth' });
       clearTimeout(horseTimer);
       horseTimer = setTimeout(activateHorse, 3000);
     }
@@ -419,7 +397,7 @@
     }
 
     title.addEventListener('click', scrollToArt);
-    autoScrollTimer = setTimeout(() => scrollToArt({ automatic: true }), 10000);
+    autoScrollTimer = setTimeout(scrollToArt, 7500);
 
     // ---- Galloping-horse ASCII animation (ported from lunar-horse.webflow.io) ----
     // Renders a sequence of horse silhouette frames as live ASCII on the canvas.
