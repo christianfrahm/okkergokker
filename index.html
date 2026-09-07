@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>okkergokker</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -29,7 +30,7 @@
     }
 
     html {
-      scroll-behavior: smooth;
+      scroll-behavior: auto;
       background: #000;
       overflow: hidden;
       overscroll-behavior: none;
@@ -99,7 +100,6 @@
       color: #fff;
       text-transform: lowercase;
       text-decoration: none;
-      cursor: pointer;
       z-index: 2;
       border: none;
       background: none;
@@ -108,8 +108,16 @@
       height: 100%;
     }
 
-    .title:hover {
-      opacity: 0.85;
+    .mirrored-k {
+      display: inline-block;
+      transform: scaleX(1);
+      transform-origin: center;
+      transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+      transition-delay: 0.5s;
+    }
+
+    .title.k-flipped .mirrored-k {
+      transform: scaleX(-1);
     }
 
     .playlist-section {
@@ -255,7 +263,7 @@
     <video autoplay loop muted playsinline webkit-playsinline preload="auto" disablepictureinpicture>
       <source src="video.mp4" type="video/mp4">
     </video>
-    <button class="title" type="button">okker.gokker</button>
+    <div class="title">ok<span class="mirrored-k">k</span>er.gok<span class="mirrored-k">k</span>er</div>
   </section>
 
   <section class="playlist-section">
@@ -328,6 +336,7 @@
     // The content is shifted down by the same amount (via --scroll-buffer in the
     // mobile CSS) so text + animation stay centered in the visible area.
     const SCROLL_BUFFER_PX = 100;
+    const SCROLL_DURATION_MS = 1500;
     document.documentElement.style.setProperty('--scroll-buffer', `${SCROLL_BUFFER_PX}px`);
 
     function onLayoutChange() {
@@ -346,12 +355,31 @@
       clearTimeout(autoScrollTimer);
       ensureVideoPlaying();
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
-      const instant = isMobile || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const buffer = isMobile ? SCROLL_BUFFER_PX : 0;
       const top = playlistSection.getBoundingClientRect().top + window.scrollY + buffer;
-      window.scrollTo({ top, behavior: instant ? 'auto' : 'smooth' });
+      animateScrollTo(top);
       clearTimeout(horseTimer);
       horseTimer = setTimeout(activateHorse, 3000);
+    }
+
+    function animateScrollTo(targetY) {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        window.scrollTo(0, targetY);
+        return;
+      }
+
+      const startY = window.scrollY;
+      const distance = targetY - startY;
+      const startTime = performance.now();
+
+      function step(now) {
+        const progress = Math.min((now - startTime) / SCROLL_DURATION_MS, 1);
+        const eased = 0.5 - Math.cos(Math.PI * progress) / 2;
+        window.scrollTo(0, startY + distance * eased);
+        if (progress < 1) requestAnimationFrame(step);
+      }
+
+      requestAnimationFrame(step);
     }
 
     function ensureVideoPlaying() {
@@ -362,6 +390,9 @@
       }
     }
 
+    video.addEventListener('playing', () => {
+      title.classList.add('k-flipped');
+    }, { once: true });
     ensureVideoPlaying();
     video.addEventListener('loadeddata', ensureVideoPlaying);
     addEventListener('visibilitychange', () => {
@@ -396,8 +427,7 @@
       if (horseOn || artRow.classList.contains('horse-active')) horse.syncLayout();
     }
 
-    title.addEventListener('click', scrollToArt);
-    autoScrollTimer = setTimeout(scrollToArt, 7500);
+    autoScrollTimer = setTimeout(scrollToArt, 3500);
 
     // ---- Galloping-horse ASCII animation (ported from lunar-horse.webflow.io) ----
     // Renders a sequence of horse silhouette frames as live ASCII on the canvas.
