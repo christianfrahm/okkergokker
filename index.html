@@ -31,7 +31,7 @@
 
     html {
       scroll-behavior: auto;
-      background: #000;
+      background: #5c5c5c;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: none;
@@ -40,123 +40,217 @@
     }
 
     body {
-      background: #000;
+      background: #5c5c5c;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: none;
     }
 
-    .page-track {
-      transform: translate3d(0, 0, 0);
-      transition: transform 1.5s cubic-bezier(0.65, 0, 0.35, 1);
-      will-change: transform;
+    /* Persistent wordmark in the top-left corner. */
+    .wordmark {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      margin: 14px 20px;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      font-size: clamp(1rem, 3.5vw, 1.35rem);
+      text-transform: lowercase;
+      color: #f1ede1;
+      user-select: none;
+      -webkit-user-select: none;
+      pointer-events: none;
     }
 
-    .hero {
-      position: relative;
+    .wordmark .wm-flip {
+      display: inline-block;
+      transform: scaleX(-1);
+    }
+
+    .card-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 100%;
-      /* Size to the LARGE viewport so the section always covers the screen even
-         when Safari's address bar retracts — otherwise a strip of the next
-         section shows through the seam. Fallback to 100vh for old browsers. */
       height: 100vh;
       height: 100lvh;
-      background: #000;
+      padding: 0.5rem;
+      background: #5c5c5c;
       overflow: hidden;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
     }
 
-    video {
+    /* ---- Draggable 3D business card (front: horse animation, back: text) ---- */
+    .card-scene {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(10px, 2.5vh, 20px);
+      width: 100%;
+    }
+
+    .card-stage {
+      position: relative;
+      width: min(90vw, 1120px, 112vh);
+      aspect-ratio: 8 / 5;
+      perspective: 1400px;
+    }
+
+    .drag-hint-arrow {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      display: block;
-      width: auto;
-      height: 100%;
-      object-fit: cover;
-      object-position: center center;
-      transform: translate(-50%, -50%);
+      top: calc(100% + clamp(2px, 0.5vh, 6px));
+      right: -32px;
+      width: clamp(48px, 6vw, 68px);
+      height: auto;
+      opacity: 0.3;
+      transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
       pointer-events: none;
+      user-select: none;
+    }
+
+    .drag-hint-arrow.hidden {
+      opacity: 0;
+    }
+
+    /* Soft cast shadow behind the card; JS shifts/scales it with the card's
+       tilt so it reads as a real, light-driven shadow while dragging. */
+    .card-shadow {
+      position: absolute;
+      inset: 0;
       z-index: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
     }
 
-    /* The source is 16:9 with a 4:3 picture pillarboxed inside it.
-       Size from the visible picture so its encoded black bars stay off-screen. */
-    @media (min-aspect-ratio: 4 / 3) {
-      video {
-        height: 75vw;
-      }
+    .card-shadow-shape {
+      fill: #000;
+      opacity: 0.5;
     }
 
-    video::-webkit-media-controls,
-    video::-webkit-media-controls-start-playback-button {
-      display: none !important;
-      -webkit-appearance: none;
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      /* Physical card thickness (front/back sit half of this apart in Z, and the
+         four edge strips span it). --half-w/--half-h are set from JS. */
+      --card-thickness: 3px;
+      transform-style: preserve-3d;
+      transform: rotateX(0deg) rotateY(0deg);
+      transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
-    .title {
+    .card.dragging {
+      transition: none;
+      cursor: grabbing;
+    }
+
+    /* Drag cursor everywhere on the card, including over the email link. */
+    .card a {
+      cursor: inherit;
+    }
+
+    .card-face {
       position: absolute;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: Arial, sans-serif;
-      font-size: clamp(2.5rem, 10vw, 8rem);
-      font-weight: bold;
-      color: #fff;
-      text-transform: lowercase;
-      text-decoration: none;
-      z-index: 2;
-      border: none;
-      background: none;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .mirrored-k {
-      display: inline-block;
-      transform: scaleX(1);
-      transform-origin: center;
-      transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
-      transition-delay: 0.5s;
-    }
-
-    .title.k-flipped .mirrored-k {
-      transform: scaleX(-1);
-    }
-
-    .playlist-section {
-      display: flex;
-      width: 100%;
-      height: 100vh;
-      height: 100lvh;
-      padding: 0.5rem;
-      background: #000;
       overflow: hidden;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
+      /* Broken-white card stock. The rough-paper grain is layered on top by the
+         ::before overlay (SVG #roughpaper filter, multiplied onto this color). */
+      background-color: #f1ede1;
+      /* Warp the whole face so the paper edge looks torn/worn, not a crisp rect. */
+      filter: url(#roughedge);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
-    .playlist-content {
-      display: grid;
+    /* Rough-paper texture: an SVG lighting filter turned into a bumpy grey
+       surface, multiplied over the card colour so the stock keeps its tint. */
+    .card-face::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      filter: url(#roughpaper);
+      mix-blend-mode: multiply;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .card-front {
+      /* Sits half the thickness in front of the card plane (also keeps oblique
+         clicks hitting the face/link, and stops WebKit bleeding through). */
+      transform: rotateY(0deg) translateZ(calc(var(--card-thickness) / 2));
+      pointer-events: auto;
+    }
+
+    .card-back {
+      transform: rotateY(180deg) translateZ(calc(var(--card-thickness) / 2));
+      padding: clamp(12px, 4%, 36px);
+      pointer-events: none;
+    }
+
+    /* The four cut edges of the card that give it a visible thickness. Their
+       colour is a touch darker than the face so the edge reads as paper stock. */
+    .card-edge {
+      position: absolute;
+      background: #ddd6c5;
+    }
+
+    .card-edge-l,
+    .card-edge-r {
+      top: 0;
+      left: 50%;
+      height: 100%;
+      width: var(--card-thickness);
+      margin-left: calc(var(--card-thickness) / -2);
+    }
+
+    .card-edge-r {
+      transform: rotateY(90deg) translateZ(var(--half-w, 50%));
+    }
+
+    .card-edge-l {
+      transform: rotateY(-90deg) translateZ(var(--half-w, 50%));
+    }
+
+    .card-edge-t,
+    .card-edge-b {
+      left: 0;
+      top: 50%;
+      width: 100%;
+      height: var(--card-thickness);
+      margin-top: calc(var(--card-thickness) / -2);
+    }
+
+    .card-edge-t {
+      transform: rotateX(90deg) translateZ(var(--half-h, 50%));
+    }
+
+    .card-edge-b {
+      transform: rotateX(-90deg) translateZ(var(--half-h, 50%));
+    }
+
+    .back-inner {
+      display: flex;
+      flex-direction: row;
       align-items: center;
+      justify-content: center;
+      gap: clamp(12px, 4%, 28px);
       width: 100%;
       height: 100%;
-      gap: 0.75rem;
-    }
-
-    .playlist-content.fills-viewport {
-      grid-template-rows: 1fr auto;
-    }
-
-    .playlist-content:not(.fills-viewport) {
-      grid-template-rows: auto auto;
-      align-content: center;
     }
 
     .ascii-art {
-      color: #fff;
+      color: #1b1a17;
       font-family: Consolas, "Courier New", Courier, monospace;
       line-height: 1.15;
       white-space: pre;
@@ -164,73 +258,41 @@
       margin: 0;
       padding: 0;
       border: 0;
-      justify-self: center;
-      min-height: 0;
-      max-width: 100%;
-      opacity: 1;
-      transition: opacity 1.4s ease;
-    }
-
-    .art-row.cowboy-hidden .ascii-art {
-      opacity: 0;
-    }
-
-    .playlist-content.fills-viewport .art-row {
-      align-self: end;
-    }
-
-    .playlist-content:not(.fills-viewport) .art-row {
-      align-self: center;
-    }
-
-    .art-row {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: clamp(8px, 2vh, 16px);
-      justify-self: center;
-      min-height: 0;
-      max-width: 100%;
-    }
-
-    .ascii-stack {
-      position: relative;
-      display: inline-block;
-      min-height: 0;
+      flex: 0 0 auto;
     }
 
     .horse-canvas {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      color: #fff;
-      cursor: url("revolver-link-select.cur"), auto;
+      top: 14px;
+      left: 14px;
+      width: calc(100% - 28px);
+      height: calc(100% - 28px);
+      color: #1b1a17;
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
       transition: opacity 0.35s ease;
     }
 
-    .art-row.horse-active .horse-canvas {
+    .card-front.horse-active .horse-canvas {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
     }
 
     .intro-text {
-      color: #fff;
+      color: #1b1a17;
       font-family: "Courier Prime", Courier, monospace;
       font-size: 11px;
       line-height: 1.5;
-      text-align: center;
-      width: 100%;
+      text-align: left;
+      flex: 1 1 auto;
+      min-width: 0;
     }
 
     @media (min-width: 769px) {
       .intro-text {
-        font-size: 16px;
+        font-size: 15px;
       }
     }
 
@@ -239,44 +301,81 @@
     }
 
     .intro-text a {
-      color: #fff;
-      text-decoration: none;
+      color: #1b1a17;
+      text-decoration: underline;
+      display: inline-block;
+      transform-origin: left center;
+      transition: transform 0.2s ease;
     }
 
-    .intro-text a:hover {
-      text-decoration: underline;
+    /* Desktop (hover-capable pointer): hovering the email — but NOT while the
+       card is being dragged — enlarges it and shows the click cursor. Touch
+       devices (hover: none) get no enlarge; the link is simply tappable. */
+    @media (hover: hover) {
+      .card:not(.dragging) .intro-text a:hover {
+        cursor: pointer;
+        transform: scale(1.2);
+      }
     }
 
     @media (max-width: 768px) {
-      .playlist-content .art-row {
-        width: 100%;
+      .drag-hint-arrow {
+        right: -16px;
       }
 
-      /* Make section 2 taller than the viewport by the scroll buffer and pad
-         its top by the same amount. This gives the tap enough room to scroll
-         the buffer past section 1 (hiding the hero video), while the padding
-         pushes the centered text + animation down so they stay centered in the
-         visible area instead of riding up. */
-      .playlist-section {
-        height: calc(100lvh + var(--scroll-buffer, 0px));
-        padding-top: calc(0.5rem + var(--scroll-buffer, 0px));
+      /* The card is too narrow for a side-by-side layout, so stack the cowboy
+         above the contact text and let the text use the full width. Tighten the
+         text so the cowboy still gets a usable amount of room. */
+      .card-back {
+        padding: 10px;
+      }
+
+      .back-inner {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .intro-text {
+        width: 100%;
+        text-align: center;
+        font-size: 10px;
+        line-height: 1.4;
+      }
+
+      .intro-text p + p {
+        margin-top: 0.6em;
       }
     }
   </style>
 </head>
 <body>
-  <main class="page-track">
-  <section class="hero">
-    <video autoplay loop muted playsinline webkit-playsinline preload="auto" disablepictureinpicture>
-      <source src="video.mp4" type="video/mp4">
-    </video>
-    <div class="title">ok<span class="mirrored-k">k</span>er.gok<span class="mirrored-k">k</span>er</div>
-  </section>
-
-  <section class="playlist-section">
-    <div class="playlist-content">
-    <div class="art-row">
-    <div class="ascii-stack">
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <filter id="roughpaper">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" result="noise" numOctaves="5" />
+      <feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2">
+        <feDistantLight azimuth="45" elevation="60" />
+      </feDiffuseLighting>
+    </filter>
+    <!-- Ragged, worn paper edge: warp the card outline with fractal noise. -->
+    <filter id="roughedge">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="4" seed="8" result="warp" />
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="1" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+  <div class="wordmark">ok<span class="wm-flip">k</span>ergok<span class="wm-flip">k</span>er</div>
+  <section class="card-page">
+    <div class="card-scene">
+    <div class="card-stage">
+    <svg class="card-shadow" aria-hidden="true">
+      <defs>
+        <filter id="card-shadow-blur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur class="card-shadow-blur" stdDeviation="15" />
+        </filter>
+      </defs>
+      <polygon class="card-shadow-shape" filter="url(#card-shadow-blur)"></polygon>
+    </svg>
+    <div class="card">
+    <div class="card-face card-front">
     <pre class="ascii-art">⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣠⣤⣴⣶⣶⣶⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⡴⠞⠛⣋⣭⣤⣤⣄⡀⠀⠀⢸⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⡀⠀⣠⡴⠾⠋⠁⠀⠐⠛⠋⠉⠛⣿⣿⡇⠀⠀⢸⡏⢻⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -311,45 +410,60 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⠄⠀⠀⠙⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
       <canvas class="horse-canvas" aria-hidden="true"></canvas>
-    </div>
-    </div>
+    </div><!-- .card-front -->
+    <div class="card-face card-back">
+    <div class="back-inner">
     <div class="intro-text">
       <p>Independent website developer patrolling Copenhagen.</p>
       <p>Unlike cowboys, I use modern technology to build, host and maintain small websites efficiently and affordably.</p>
       <p>Need a new sheriff online?</p>
       <p>Contact me at: <a href="mailto:howdy@okkergokker.dk">howdy@okkergokker.dk</a></p>
     </div>
-    </div>
+    </div><!-- .back-inner -->
+    </div><!-- .card-back -->
+    <div class="card-edge card-edge-l" aria-hidden="true"></div>
+    <div class="card-edge card-edge-r" aria-hidden="true"></div>
+    <div class="card-edge card-edge-t" aria-hidden="true"></div>
+    <div class="card-edge card-edge-b" aria-hidden="true"></div>
+    </div><!-- .card -->
+    <img class="drag-hint-arrow" src="drag-arrow.svg" alt="" aria-hidden="true">
+    </div><!-- .card-stage -->
+    </div><!-- .card-scene -->
   </section>
-  </main>
   <script>
-    const title = document.querySelector('.title');
-    const hero = document.querySelector('.hero');
-    const pageTrack = document.querySelector('.page-track');
-    const video = document.querySelector('video');
     const asciiArt = document.querySelector('.ascii-art');
     const introText = document.querySelector('.intro-text');
-    const playlistContent = document.querySelector('.playlist-content');
-    const playlistSection = document.querySelector('.playlist-section');
-    const artRow = document.querySelector('.art-row');
-    const asciiStack = document.querySelector('.ascii-stack');
+    const cardScene = document.querySelector('.card-scene');
+    const cardStage = document.querySelector('.card-stage');
+    const card = document.querySelector('.card');
+    const cardFront = document.querySelector('.card-front');
+    const cardBack = document.querySelector('.card-back');
+    const backInner = document.querySelector('.back-inner');
+    const cardShadow = document.querySelector('.card-shadow');
+    const cardShadowShape = document.querySelector('.card-shadow-shape');
+    const cardShadowBlur = document.querySelector('.card-shadow-blur');
+    const dragHintArrow = document.querySelector('.drag-hint-arrow');
     const horseCanvas = document.querySelector('.horse-canvas');
+
+    // The cowboy portrait lives on the text side, beside the contact details.
+    backInner.insertBefore(asciiArt, backInner.firstChild);
 
     let lockedWidth = window.innerWidth;
     let horseOn = false;
-    let horseTimer = 0;
-    let autoScrollTimer = 0;
+    let isDraggingCard = false;
 
-    // Extra pixels we scroll past the second section's top on mobile, so the
-    // hero video can't peek through the seam when Safari's address bar retracts.
-    // The content is shifted down by the same amount (via --scroll-buffer in the
-    // mobile CSS) so text + animation stay centered in the visible area.
-    const SCROLL_BUFFER_PX = 100;
-    document.documentElement.style.setProperty('--scroll-buffer', `${SCROLL_BUFFER_PX}px`);
+    // Position the card's edge strips at the real half-width/half-height so the
+    // thickness lines up with the (responsive) card size.
+    function updateCardThickness() {
+      const r = cardStage.getBoundingClientRect();
+      card.style.setProperty('--half-w', `${r.width / 2}px`);
+      card.style.setProperty('--half-h', `${r.height / 2}px`);
+    }
 
     function onLayoutChange() {
       lockedWidth = window.innerWidth;
       fitContent();
+      updateCardThickness();
     }
 
     function onResize() {
@@ -359,70 +473,45 @@
       onLayoutChange();
     }
 
-    function scrollToArt() {
-      clearTimeout(autoScrollTimer);
-      ensureVideoPlaying();
-      const isMobile = window.matchMedia('(max-width: 768px)').matches;
-      const buffer = isMobile ? SCROLL_BUFFER_PX : 0;
-      const top = playlistSection.getBoundingClientRect().top + window.scrollY + buffer;
-      animateScrollTo(top);
-      clearTimeout(horseTimer);
-      horseTimer = setTimeout(activateHorse, 3000);
-    }
-
-    function animateScrollTo(targetY) {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        pageTrack.style.transitionDuration = '0s';
-      }
-      pageTrack.style.transform = `translate3d(0, ${-targetY}px, 0)`;
-    }
-
-    function ensureVideoPlaying() {
-      video.muted = true;
-      video.playsInline = true;
-      if (video.paused) {
-        video.play().catch(() => {});
-      }
-    }
-
-    video.addEventListener('playing', () => {
-      title.classList.add('k-flipped');
-    }, { once: true });
-    ensureVideoPlaying();
-    video.addEventListener('loadeddata', ensureVideoPlaying);
-    addEventListener('visibilitychange', () => {
-      if (!document.hidden) ensureVideoPlaying();
-    });
-    addEventListener('touchstart', ensureVideoPlaying, { once: true, passive: true });
-
+    // Fit the cowboy portrait on the text side of the card. Desktop lays it out
+    // beside the text (row): cowboy at full height, capped to 40% width. Mobile
+    // stacks it above the full-width text (column): cowboy fills the height left
+    // over once the text has taken what it needs.
     function fitContent() {
-      const styles = getComputedStyle(playlistSection);
-      const paddingX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
-      const paddingY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
-      const gap = parseFloat(getComputedStyle(playlistContent).gap) || 0;
-      const maxWidth = playlistSection.clientWidth - paddingX;
-      const maxHeight = playlistSection.clientHeight - paddingY;
-      const baseAsciiSize = 16;
+      if (!cardBack) return;
+      const cs = getComputedStyle(cardBack);
+      const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      const maxWidth = cardBack.clientWidth - padX;
+      const maxHeight = cardBack.clientHeight - padY;
+      if (maxWidth <= 0 || maxHeight <= 0) return;
 
-      asciiArt.style.fontSize = `${baseAsciiSize}px`;
-      const textHeight = introText.offsetHeight;
-      const availableHeight = Math.max(0, maxHeight - textHeight - gap);
+      const gap = parseFloat(getComputedStyle(backInner).gap) || 0;
+      const base = 16;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      asciiArt.style.fontSize = `${base}px`;
 
-      let scale = maxWidth / asciiArt.scrollWidth;
-      asciiArt.style.fontSize = `${baseAsciiSize * scale}px`;
-
-      if (asciiArt.offsetHeight > availableHeight) {
-        scale *= availableHeight / asciiArt.offsetHeight;
-        asciiArt.style.fontSize = `${baseAsciiSize * scale}px`;
+      if (isMobile) {
+        const available = Math.max(0, maxHeight - introText.offsetHeight - gap);
+        let scale = available / asciiArt.offsetHeight;
+        asciiArt.style.fontSize = `${base * scale}px`;
+        if (asciiArt.scrollWidth > maxWidth) {
+          scale *= maxWidth / asciiArt.scrollWidth;
+          asciiArt.style.fontSize = `${base * scale}px`;
+        }
+      } else {
+        const cowboyMaxW = Math.max(0, (maxWidth - gap) * 0.4);
+        let scale = maxHeight / asciiArt.offsetHeight;
+        asciiArt.style.fontSize = `${base * scale}px`;
+        if (asciiArt.scrollWidth > cowboyMaxW) {
+          scale *= cowboyMaxW / asciiArt.scrollWidth;
+          asciiArt.style.fontSize = `${base * scale}px`;
+        }
       }
-
-      const totalHeight = artRow.offsetHeight + gap + introText.offsetHeight;
-      playlistContent.classList.toggle('fills-viewport', totalHeight >= maxHeight - 1);
-
-      if (horseOn || artRow.classList.contains('horse-active')) horse.syncLayout();
     }
 
-    autoScrollTimer = setTimeout(scrollToArt, 3500);
+    // The card is the whole page now, so start the horse shortly after load.
+    setTimeout(activateHorse, 500);
 
     // ---- Galloping-horse ASCII animation (ported from lunar-horse.webflow.io) ----
     // Renders a sequence of horse silhouette frames as live ASCII on the canvas.
@@ -468,6 +557,8 @@
       let outroMode = false;
       let outroStartTime = 0;
       let onStopComplete = null;
+      let onIntroComplete = null;
+      let introCompleteFired = false;
 
       let running = false;
       let wantRun = false;
@@ -481,18 +572,8 @@
       const luminance = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
       const clamp01 = (t) => Math.max(0, Math.min(1, t));
 
-      canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        mouseX = (e.clientX - rect.left) * DPR;
-        mouseY = (e.clientY - rect.top) * DPR;
-        isHovering = true;
-      });
-
-      canvas.addEventListener('mouseleave', () => {
-        isHovering = false;
-        mouseX = -9999;
-        mouseY = -9999;
-      });
+      // Hover repel removed: the horse renders as a plain animation with no
+      // cursor interaction (isHovering stays false, so renderGlyphs skips it).
 
       function buildAppearDelays() {
         const n = cols * rows;
@@ -525,11 +606,15 @@
       // Square cells derived from the actual canvas box, so the landscape horse
       // is not distorted inside the portrait area the cowboy occupies.
       function resize() {
-        const rect = canvas.getBoundingClientRect();
-        if (rect.width < 10 || rect.height < 10) return;
+        // Use layout (offset) size, not getBoundingClientRect: the card can be
+        // 3D-rotated, which shrinks the projected client rect and would make the
+        // grid re-randomize and re-fade every frame while dragging.
+        const rectW = canvas.offsetWidth;
+        const rectH = canvas.offsetHeight;
+        if (rectW < 10 || rectH < 10) return;
 
-        const w = Math.floor(rect.width * DPR);
-        const h = Math.floor(rect.height * DPR);
+        const w = Math.floor(rectW * DPR);
+        const h = Math.floor(rectH * DPR);
 
         // Only touch canvas.width/height when they actually change: assigning
         // either reallocates and clears the whole bitmap, so skipping it every
@@ -702,6 +787,14 @@
         prepareData();
         renderGlyphs(now);
 
+        if (!outroMode && !introCompleteFired &&
+            now - introStartTime >= APPEAR_GAP_MS + APPEAR_FADE_MS) {
+          introCompleteFired = true;
+          const done = onIntroComplete;
+          onIntroComplete = null;
+          done?.();
+        }
+
         if (outroMode && now - outroStartTime >= APPEAR_GAP_MS + APPEAR_FADE_MS) {
           finishStop();
           return;
@@ -721,34 +814,21 @@
         done?.();
       }
 
+      // The canvas now fills the fixed card front via CSS (inset), so there is
+      // no box to size here — just force a re-raster on the next frame.
       function syncLayout() {
-        if (!ready || !frames[0]) return;
-
-        const h = asciiArt.offsetHeight;
-        const iw = frames[0].naturalWidth;
-        const ih = frames[0].naturalHeight;
-        const styles = getComputedStyle(playlistSection);
-        const paddingX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
-        const maxW = playlistSection.clientWidth - paddingX;
-        const idealW = h * (iw / ih);
-        const isMobile = window.matchMedia('(max-width: 768px)').matches;
-        const w = isMobile ? maxW : Math.min(idealW, maxW);
-
-        asciiStack.style.width = `${w}px`;
-        asciiStack.style.height = `${h}px`;
         dataKey = '';
       }
 
-      function clearLayout() {
-        asciiStack.style.width = '';
-        asciiStack.style.height = '';
-      }
+      function clearLayout() {}
 
-      function start() {
+      function start(onIntroDone) {
         wantRun = true;
+        if (onIntroDone) onIntroComplete = onIntroDone;
         if (!ready || running) return;
         outroMode = false;
         onStopComplete = null;
+        introCompleteFired = false;
         syncLayout();
         running = true;
         resize();
@@ -776,29 +856,190 @@
         finishStop();
       }
 
+      let onReadyCb = null;
+
       loadImages().then((loaded) => {
         frames = loaded;
         ready = frames.length > 0;
         if (wantRun) start();
+        if (onReadyCb) { const cb = onReadyCb; onReadyCb = null; cb(); }
       });
 
-      return { start, stop, fadeOut, syncLayout, clearLayout };
+      return {
+        start, stop, fadeOut, syncLayout, clearLayout,
+        // Fires once the frame images have finished loading (immediately if
+        // they already have).
+        onReady(cb) { if (ready) cb(); else onReadyCb = cb; }
+      };
     })();
 
     function activateHorse() {
       if (horseOn) return;
       horseOn = true;
-      artRow.classList.add('horse-active', 'cowboy-hidden');
+      cardFront.classList.add('horse-active');
       horse.syncLayout();
       horse.start();
     }
 
+    // ---- Drag to rotate the 3D card (front = horse, back = contact text) ----
+    // rotX/rotY is what's shown; targetRotX/Y is where the drag wants it. The
+    // shown value eases toward the target each frame, so the card has weight —
+    // it lags the finger but catches up more quickly after release.
+    let rotX = 0;
+    let rotY = 0;
+    let targetRotX = 0;
+    let targetRotY = 0;
+    let inertiaRaf = 0;
+    let dragPointerId = null;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragStartRotX = 0;
+    let dragStartRotY = 0;
+    let dragMoved = false;
+    const DRAG_THRESHOLD = 5;
+    const ROT_SPEED = 0.38;
+    const DRAG_EASE = 0.11;
+    const RELEASE_EASE = 0.2;
+
+    function applyCardTransform() {
+      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      const rad = Math.PI / 180;
+      const frontFacing = Math.cos(rotX * rad) * Math.cos(rotY * rad) >= 0;
+      cardFront.style.pointerEvents = frontFacing ? 'auto' : 'none';
+      cardBack.style.pointerEvents = frontFacing ? 'none' : 'auto';
+      updateCardShadow();
+    }
+
+    // Drive the cast shadow from the card's tilt: it slides opposite the turn
+    // and grows/softens as the card leans away, like a light fixed above-front.
+    function updateCardShadow() {
+      const rad = Math.PI / 180;
+      const w = cardStage.clientWidth;
+      const h = cardStage.clientHeight;
+      if (!w || !h) return;
+
+      const rx = rotX * rad;
+      const ry = rotY * rad;
+      const cosX = Math.cos(rx);
+      const sinX = Math.sin(rx);
+      const cosY = Math.cos(ry);
+      const sinY = Math.sin(ry);
+      const perspective = 1400;
+      const shadowOffsetX = -sinY * 32;
+      const shadowOffsetY = 26 + Math.sin(rx) * 18;
+      const corners = [
+        [-w / 2, -h / 2],
+        [ w / 2, -h / 2],
+        [ w / 2,  h / 2],
+        [-w / 2,  h / 2]
+      ];
+
+      const points = corners.map(([x, y]) => {
+        // CSS applies rotateY first, then rotateX. Project those transformed
+        // corners through the stage's 1400px perspective onto the page plane.
+        const px = x * cosY;
+        const py = y * cosX + x * sinY * sinX;
+        const pz = y * sinX - x * sinY * cosX;
+        const perspectiveScale = perspective / (perspective - pz);
+        return [
+          w / 2 + px * perspectiveScale + shadowOffsetX,
+          h / 2 + py * perspectiveScale + shadowOffsetY
+        ];
+      });
+
+      cardShadowShape.setAttribute(
+        'points',
+        points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ')
+      );
+
+      let twiceArea = 0;
+      for (let i = 0; i < points.length; i++) {
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[(i + 1) % points.length];
+        twiceArea += x1 * y2 - x2 * y1;
+      }
+      const visibleArea = Math.min(1, Math.abs(twiceArea) / (2 * w * h));
+      cardShadowShape.style.opacity = String(0.12 + Math.sqrt(visibleArea) * 0.38);
+      cardShadowBlur.setAttribute('stdDeviation', String(8 + visibleArea * 7));
+    }
+
+    function inertiaStep() {
+      const ease = isDraggingCard ? DRAG_EASE : RELEASE_EASE;
+      rotX += (targetRotX - rotX) * ease;
+      rotY += (targetRotY - rotY) * ease;
+      applyCardTransform();
+      const settled = Math.abs(targetRotX - rotX) < 0.05 && Math.abs(targetRotY - rotY) < 0.05;
+      if (!isDraggingCard && settled) {
+        rotX = targetRotX;
+        rotY = targetRotY;
+        applyCardTransform();
+        inertiaRaf = 0;
+        card.classList.remove('dragging');
+        cardShadow.style.transition = '';
+        return;
+      }
+      inertiaRaf = requestAnimationFrame(inertiaStep);
+    }
+
+    function startInertia() {
+      if (!inertiaRaf) inertiaRaf = requestAnimationFrame(inertiaStep);
+    }
+
+    card.addEventListener('pointerdown', (e) => {
+      if (dragPointerId !== null) return;
+      dragPointerId = e.pointerId;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      dragStartRotX = targetRotX;
+      dragStartRotY = targetRotY;
+      dragMoved = false;
+    });
+
+    card.addEventListener('pointermove', (e) => {
+      if (dragPointerId !== e.pointerId) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      if (!dragMoved) {
+        // Wait for a real drag before hijacking the gesture, so a plain tap on
+        // the back's email link still registers as a click.
+        if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+        dragMoved = true;
+        isDraggingCard = true;
+        dragHintArrow.classList.add('hidden');
+        card.classList.add('dragging');
+        cardShadow.style.transition = 'none';
+        card.setPointerCapture(e.pointerId);
+        cardScene.classList.add('flipped-once');
+      }
+      e.preventDefault();
+      targetRotY = dragStartRotY + dx * ROT_SPEED;
+      targetRotX = Math.max(-80, Math.min(80, dragStartRotX - dy * ROT_SPEED));
+      startInertia();
+    });
+
+    function endCardDrag(e) {
+      if (dragPointerId !== e.pointerId) return;
+      dragPointerId = null;
+      if (!dragMoved) return;
+      dragMoved = false;
+      isDraggingCard = false;
+      // Leave .dragging on until the glide settles (inertiaStep clears it), so
+      // the CSS transition doesn't fight the easing.
+      startInertia();
+      if (card.hasPointerCapture(e.pointerId)) card.releasePointerCapture(e.pointerId);
+    }
+
+    card.addEventListener('pointerup', endCardDrag);
+    card.addEventListener('pointercancel', endCardDrag);
+    applyCardTransform();
+
     fitContent();
+    updateCardThickness();
     addEventListener('resize', onResize);
     addEventListener('orientationchange', () => {
       setTimeout(onLayoutChange, 100);
     });
-    document.fonts.ready.then(fitContent);
+    document.fonts.ready.then(() => { fitContent(); updateCardThickness(); });
   </script>
 </body>
 </html>
