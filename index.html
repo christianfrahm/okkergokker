@@ -53,19 +53,28 @@
       left: 0;
       z-index: 100;
       margin: 14px 20px;
+      padding: 0;
+      border: none;
+      background: none;
       font-family: Arial, sans-serif;
       font-weight: bold;
       font-size: clamp(1rem, 3.5vw, 1.35rem);
       text-transform: lowercase;
       color: #f1ede1;
+      cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
-      pointer-events: none;
     }
 
-    .wordmark .wm-flip {
+    .wordmark .wm-k {
       display: inline-block;
-      transform: scaleX(-1);
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (hover: hover) {
+      .wordmark:hover .wm-k {
+        transform: scaleX(-1);
+      }
     }
 
     .card-page {
@@ -96,19 +105,21 @@
       perspective: 1400px;
     }
 
-    .drag-hint-arrow {
-      position: absolute;
-      top: calc(100% + clamp(2px, 0.5vh, 6px));
-      right: -32px;
-      width: clamp(48px, 6vw, 68px);
-      height: auto;
-      opacity: 0.3;
+    .drag-hint {
+      display: none;
+      margin: 5rem 0 0;
+      font-family: "Courier Prime", Courier, monospace;
+      font-size: clamp(0.85rem, 3.5vw, 1.05rem);
+      letter-spacing: 0.04em;
+      color: #f1ede1;
+      opacity: 0.55;
       transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
       pointer-events: none;
       user-select: none;
+      -webkit-user-select: none;
     }
 
-    .drag-hint-arrow.hidden {
+    .drag-hint.hidden {
       opacity: 0;
     }
 
@@ -152,6 +163,10 @@
       cursor: grabbing;
     }
 
+    .card.hint-tilting {
+      transition: none;
+    }
+
     /* Drag cursor everywhere on the card, including over the email link. */
     .card a {
       cursor: inherit;
@@ -182,6 +197,7 @@
       filter: url(#roughpaper);
       mix-blend-mode: multiply;
       opacity: 0.5;
+      z-index: 3;
       pointer-events: none;
     }
 
@@ -280,6 +296,18 @@
       pointer-events: auto;
     }
 
+    .card-logo {
+      position: absolute;
+      right: clamp(14px, 3%, 28px);
+      bottom: clamp(14px, 3%, 28px);
+      width: clamp(30px, 7vw, 64px);
+      height: auto;
+      z-index: 2;
+      opacity: 0.2;
+      pointer-events: none;
+      user-select: none;
+    }
+
     .intro-text {
       color: #1b1a17;
       font-family: "Courier Prime", Courier, monospace;
@@ -319,8 +347,8 @@
     }
 
     @media (max-width: 768px) {
-      .drag-hint-arrow {
-        right: -16px;
+      .drag-hint {
+        display: block;
       }
 
       /* The card is too narrow for a side-by-side layout, so stack the cowboy
@@ -362,7 +390,7 @@
       <feDisplacementMap in="SourceGraphic" in2="warp" scale="1" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
-  <div class="wordmark">ok<span class="wm-flip">k</span>ergok<span class="wm-flip">k</span>er</div>
+  <button type="button" class="wordmark" aria-label="Vis bagsiden af visitkortet">ok<span class="wm-k">k</span>ergok<span class="wm-k">k</span>er</button>
   <section class="card-page">
     <div class="card-scene">
     <div class="card-stage">
@@ -410,6 +438,7 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⠄⠀⠀⠙⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
       <canvas class="horse-canvas" aria-hidden="true"></canvas>
+      <img class="card-logo" src="favicon.svg" alt="" aria-hidden="true">
     </div><!-- .card-front -->
     <div class="card-face card-back">
     <div class="back-inner">
@@ -426,8 +455,8 @@
     <div class="card-edge card-edge-t" aria-hidden="true"></div>
     <div class="card-edge card-edge-b" aria-hidden="true"></div>
     </div><!-- .card -->
-    <img class="drag-hint-arrow" src="drag-arrow.svg" alt="" aria-hidden="true">
     </div><!-- .card-stage -->
+    <p class="drag-hint" aria-hidden="true">Drag me!</p>
     </div><!-- .card-scene -->
   </section>
   <script>
@@ -442,8 +471,8 @@
     const cardShadow = document.querySelector('.card-shadow');
     const cardShadowShape = document.querySelector('.card-shadow-shape');
     const cardShadowBlur = document.querySelector('.card-shadow-blur');
-    const dragHintArrow = document.querySelector('.drag-hint-arrow');
     const horseCanvas = document.querySelector('.horse-canvas');
+    const dragHint = document.querySelector('.drag-hint');
 
     // The cowboy portrait lives on the text side, beside the contact details.
     backInner.insertBefore(asciiArt, backInner.firstChild);
@@ -878,7 +907,11 @@
       horseOn = true;
       cardFront.classList.add('horse-active');
       horse.syncLayout();
-      horse.start();
+      horse.start(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+            cardScene.classList.contains('flipped-once')) return;
+        hintCardBack();
+      });
     }
 
     // ---- Drag to rotate the 3D card (front = horse, back = contact text) ----
@@ -890,6 +923,8 @@
     let targetRotX = 0;
     let targetRotY = 0;
     let inertiaRaf = 0;
+    let hintTiltRaf = 0;
+    let snapRaf = 0;
     let dragPointerId = null;
     let dragStartX = 0;
     let dragStartY = 0;
@@ -965,6 +1000,92 @@
       cardShadowBlur.setAttribute('stdDeviation', String(8 + visibleArea * 7));
     }
 
+    function hintCardBack() {
+      if (hintTiltRaf) cancelAnimationFrame(hintTiltRaf);
+      card.classList.add('hint-tilting');
+      const startRotation = rotY;
+      const startTime = performance.now();
+      const duration = 1400;
+
+      function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const phase = progress < 0.5 ? progress * 2 : (1 - progress) * 2;
+        const eased = 0.5 - Math.cos(Math.PI * phase) / 2;
+        rotY = startRotation - 45 * eased;
+        targetRotY = rotY;
+        applyCardTransform();
+
+        if (progress < 1 && !isDraggingCard) {
+          hintTiltRaf = requestAnimationFrame(step);
+          return;
+        }
+
+        hintTiltRaf = 0;
+        card.classList.remove('hint-tilting');
+      }
+
+      hintTiltRaf = requestAnimationFrame(step);
+    }
+
+    function snapToFlatBack() {
+      if (snapRaf) cancelAnimationFrame(snapRaf);
+      if (hintTiltRaf) {
+        cancelAnimationFrame(hintTiltRaf);
+        hintTiltRaf = 0;
+      }
+      if (inertiaRaf) {
+        cancelAnimationFrame(inertiaRaf);
+        inertiaRaf = 0;
+      }
+
+      isDraggingCard = false;
+      dragPointerId = null;
+      dragMoved = false;
+      dragHint.classList.add('hidden');
+      cardScene.classList.add('flipped-once');
+      card.classList.remove('dragging');
+      card.classList.add('hint-tilting');
+      cardShadow.style.transition = '';
+
+      const startX = rotX;
+      const startY = rotY;
+      const normalized = ((startY % 360) + 360) % 360;
+      let deltaY = 180 - normalized;
+      if (deltaY > 180) deltaY -= 360;
+      if (deltaY < -180) deltaY += 360;
+      const endX = 0;
+      const endY = startY + deltaY;
+      const startTime = performance.now();
+      const duration = 850;
+
+      function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 0.5 - Math.cos(Math.PI * progress) / 2;
+        rotX = startX + (endX - startX) * eased;
+        rotY = startY + (endY - startY) * eased;
+        targetRotX = rotX;
+        targetRotY = rotY;
+        applyCardTransform();
+
+        if (progress < 1) {
+          snapRaf = requestAnimationFrame(step);
+          return;
+        }
+
+        rotX = endX;
+        rotY = endY;
+        targetRotX = endX;
+        targetRotY = endY;
+        applyCardTransform();
+        snapRaf = 0;
+        card.classList.remove('hint-tilting');
+      }
+
+      snapRaf = requestAnimationFrame(step);
+    }
+
+    document.querySelector('.wordmark').addEventListener('click', snapToFlatBack);
+
     function inertiaStep() {
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const ease = isDraggingCard
@@ -992,6 +1113,19 @@
 
     card.addEventListener('pointerdown', (e) => {
       if (dragPointerId !== null) return;
+      if (snapRaf) {
+        cancelAnimationFrame(snapRaf);
+        snapRaf = 0;
+        targetRotX = rotX;
+        targetRotY = rotY;
+      }
+      if (hintTiltRaf) {
+        cancelAnimationFrame(hintTiltRaf);
+        hintTiltRaf = 0;
+        targetRotX = rotX;
+        targetRotY = rotY;
+      }
+      card.classList.remove('hint-tilting');
       dragPointerId = e.pointerId;
       dragStartX = e.clientX;
       dragStartY = e.clientY;
@@ -1010,7 +1144,7 @@
         if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
         dragMoved = true;
         isDraggingCard = true;
-        dragHintArrow.classList.add('hidden');
+        dragHint.classList.add('hidden');
         card.classList.add('dragging');
         cardShadow.style.transition = 'none';
         card.setPointerCapture(e.pointerId);
