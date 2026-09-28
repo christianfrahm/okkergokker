@@ -899,6 +899,8 @@
     const DRAG_THRESHOLD = 5;
     const ROT_SPEED = 0.38;
     const DRAG_EASE = 0.11;
+    const MOBILE_ROT_SPEED = 0.44;
+    const MOBILE_DRAG_EASE = 0.14;
     const RELEASE_EASE = 0.2;
 
     function applyCardTransform() {
@@ -964,7 +966,10 @@
     }
 
     function inertiaStep() {
-      const ease = isDraggingCard ? DRAG_EASE : RELEASE_EASE;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const ease = isDraggingCard
+        ? (isMobile ? MOBILE_DRAG_EASE : DRAG_EASE)
+        : RELEASE_EASE;
       rotX += (targetRotX - rotX) * ease;
       rotY += (targetRotY - rotY) * ease;
       applyCardTransform();
@@ -1012,8 +1017,11 @@
         cardScene.classList.add('flipped-once');
       }
       e.preventDefault();
-      targetRotY = dragStartRotY + dx * ROT_SPEED;
-      targetRotX = Math.max(-80, Math.min(80, dragStartRotX - dy * ROT_SPEED));
+      const speed = window.matchMedia('(max-width: 768px)').matches
+        ? MOBILE_ROT_SPEED
+        : ROT_SPEED;
+      targetRotY = dragStartRotY + dx * speed;
+      targetRotX = Math.max(-80, Math.min(80, dragStartRotX - dy * speed));
       startInertia();
     });
 
