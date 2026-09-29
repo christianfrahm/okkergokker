@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>okkergokker</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
   <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -390,7 +389,7 @@
       <feDisplacementMap in="SourceGraphic" in2="warp" scale="1" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
-  <button type="button" class="wordmark" aria-label="Vis bagsiden af visitkortet">ok<span class="wm-k">k</span>ergok<span class="wm-k">k</span>er</button>
+  <button type="button" class="wordmark" aria-label="Skift mellem forside og bagside af visitkortet">ok<span class="wm-k">k</span>ergok<span class="wm-k">k</span>er</button>
   <section class="card-page">
     <div class="card-scene">
     <div class="card-stage">
@@ -438,7 +437,7 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⠄⠀⠀⠙⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
       <canvas class="horse-canvas" aria-hidden="true"></canvas>
-      <img class="card-logo" src="favicon.svg" alt="" aria-hidden="true">
+      <img class="card-logo" src="kk-logo.png" alt="" aria-hidden="true">
     </div><!-- .card-front -->
     <div class="card-face card-back">
     <div class="back-inner">
@@ -1027,7 +1026,12 @@
       hintTiltRaf = requestAnimationFrame(step);
     }
 
-    function snapToFlatBack() {
+    function isFlatOnBack() {
+      const normalized = ((rotY % 360) + 360) % 360;
+      return Math.abs(rotX) < 2 && Math.abs(normalized - 180) < 2;
+    }
+
+    function snapToFlatFace() {
       if (snapRaf) cancelAnimationFrame(snapRaf);
       if (hintTiltRaf) {
         cancelAnimationFrame(hintTiltRaf);
@@ -1049,8 +1053,10 @@
 
       const startX = rotX;
       const startY = rotY;
+      const wantBack = !isFlatOnBack();
+      const targetY = wantBack ? 180 : 0;
       const normalized = ((startY % 360) + 360) % 360;
-      let deltaY = 180 - normalized;
+      let deltaY = targetY - normalized;
       if (deltaY > 180) deltaY -= 360;
       if (deltaY < -180) deltaY += 360;
       const endX = 0;
@@ -1084,7 +1090,7 @@
       snapRaf = requestAnimationFrame(step);
     }
 
-    document.querySelector('.wordmark').addEventListener('click', snapToFlatBack);
+    document.querySelector('.wordmark').addEventListener('click', snapToFlatFace);
 
     function inertiaStep() {
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
