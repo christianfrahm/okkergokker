@@ -409,7 +409,8 @@
       text-shadow: 1px 1px 0px #fff;
     }
 
-    .card.dorsia-mode .card-back {
+    .card.dorsia-on-back .card-back,
+    .card.dorsia-on-front .card-front {
       padding: 0;
       background:
         linear-gradient(rgba(255, 255, 255, 0.55), rgba(230, 230, 230, 0.55)),
@@ -417,26 +418,37 @@
       box-shadow: inset 1px 1px 3px #fff;
     }
 
-    .card.dorsia-mode .card-back::before {
+    .card.dorsia-on-back .card-back::before,
+    .card.dorsia-on-front .card-front::before {
       opacity: 0.18;
     }
 
-    .card.dorsia-mode .back-inner {
+    .card.dorsia-on-back .back-inner {
       display: none;
     }
 
-    .card.dorsia-mode .dorsia-card {
+    .card.dorsia-on-front .card-front.horse-active .horse-canvas {
+      opacity: 0 !important;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .card.dorsia-on-back .dorsia-card,
+    .card.dorsia-on-front .dorsia-card {
       display: flex;
     }
 
-    .card.dorsia-ready .card-front {
+    .card.dorsia-ready.dorsia-on-back .card-front,
+    .card.dorsia-ready.dorsia-on-front .card-back {
+      padding: 0;
       background:
         linear-gradient(rgba(255, 255, 255, 0.55), rgba(230, 230, 230, 0.55)),
         #f4f1ea;
       box-shadow: inset 1px 1px 3px #fff;
     }
 
-    .card.dorsia-ready .card-front::before {
+    .card.dorsia-ready.dorsia-on-back .card-front::before,
+    .card.dorsia-ready.dorsia-on-front .card-back::before {
       opacity: 0.18;
     }
 
@@ -444,10 +456,14 @@
       background: #e8e2d4;
     }
 
-    .card.dorsia-ready .card-front.horse-active .horse-canvas {
+    .card.dorsia-ready.dorsia-on-back .card-front.horse-active .horse-canvas {
       opacity: 0 !important;
       visibility: hidden;
       pointer-events: none;
+    }
+
+    .card.dorsia-ready.dorsia-on-front .back-inner {
+      display: none;
     }
 
     .dorsia-card .top {
@@ -1170,12 +1186,23 @@
       hintTiltRaf = requestAnimationFrame(step);
     }
 
+    function isFrontFacing() {
+      const rad = Math.PI / 180;
+      return Math.cos(rotX * rad) * Math.cos(rotY * rad) >= 0;
+    }
+
     function isFlatOnBack() {
       const normalized = ((rotY % 360) + 360) % 360;
       return Math.abs(rotX) < 2 && Math.abs(normalized - 180) < 2;
     }
 
-    function snapToFlatFace(onComplete) {
+    function isFlatOnFront() {
+      const normalized = ((rotY % 360) + 360) % 360;
+      const nearZero = Math.abs(normalized) < 2 || Math.abs(normalized - 360) < 2;
+      return Math.abs(rotX) < 2 && nearZero;
+    }
+
+    function snapToFlatFace(onComplete, forceSide) {
       if (snapRaf) cancelAnimationFrame(snapRaf);
       if (hintTiltRaf) {
         cancelAnimationFrame(hintTiltRaf);
@@ -1197,7 +1224,10 @@
 
       const startX = rotX;
       const startY = rotY;
-      const wantBack = !isFlatOnBack();
+      let wantBack;
+      if (forceSide === 'back') wantBack = true;
+      else if (forceSide === 'front') wantBack = false;
+      else wantBack = !isFlatOnBack();
       const targetY = wantBack ? 180 : 0;
       const normalized = ((startY % 360) + 360) % 360;
       let deltaY = targetY - normalized;
@@ -1238,26 +1268,36 @@
     document.querySelector('.wordmark').addEventListener('click', () => snapToFlatFace());
 
     function activateDorsia() {
-      if (card.classList.contains('dorsia-mode') || card.dataset.dorsiaLoading === '1') return;
+      if (card.classList.contains('dorsia-on-front') ||
+          card.classList.contains('dorsia-on-back') ||
+          card.dataset.dorsiaLoading === '1') return;
       card.dataset.dorsiaLoading = '1';
       cheatCode.value = 'dorsia';
       cheatCode.blur();
       dragHint.classList.add('hidden');
       cardScene.classList.add('flipped-once');
 
-      const finishFront = () => {
+      const placeOnBack = isFrontFacing();
+      const sideClass = placeOnBack ? 'dorsia-on-back' : 'dorsia-on-front';
+      const targetSide = placeOnBack ? 'back' : 'front';
+      const host = placeOnBack ? cardBack : cardFront;
+
+      const finishReady = () => {
         card.classList.add('dorsia-ready');
         delete card.dataset.dorsiaLoading;
       };
 
       const startDorsia = () => {
-        card.classList.add('dorsia-mode');
+        host.appendChild(dorsiaCard);
         dorsiaCard.setAttribute('aria-hidden', 'false');
-        if (isFlatOnBack()) {
-          finishFront();
+        card.classList.add(sideClass);
+
+        const alreadyThere = placeOnBack ? isFlatOnBack() : isFlatOnFront();
+        if (alreadyThere) {
+          finishReady();
           return;
         }
-        snapToFlatFace(finishFront);
+        snapToFlatFace(finishReady, targetSide);
       };
 
       const fontReady = document.fonts?.load
