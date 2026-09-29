@@ -118,6 +118,72 @@
       }
     }
 
+    .bloods {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .bloods.active {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+    }
+
+    .blood {
+      position: relative;
+      top: -110%;
+      height: 100%;
+      flex: 0 0 auto;
+      border-radius: 0 0 1em 1em;
+      background: linear-gradient(to bottom, var(--blood), var(--blood-dark));
+      animation: blood-drip var(--drip-time) cubic-bezier(0.17, 0.67, 0.41, 0.43) var(--drip-delay) forwards;
+    }
+
+    .blood::before,
+    .blood::after {
+      content: "";
+      position: absolute;
+    }
+
+    .blood::before {
+      width: 100%;
+      height: var(--drop-size);
+      top: 90%;
+      left: 0;
+      border-radius: 0 100% 100% 100%;
+      background: var(--blood-tip);
+      transform: rotate(45deg);
+      animation: blood-drop var(--drop-time) cubic-bezier(0.17, 0.67, 0.41, 0.43) var(--drop-delay) forwards;
+    }
+
+    .blood::after {
+      width: 106%;
+      height: 1em;
+      bottom: 0;
+      left: -2%;
+      border-radius: 100%;
+      background: var(--blood-tip);
+    }
+
+    @keyframes blood-drip {
+      to {
+        top: 0;
+        border-radius: 0;
+      }
+    }
+
+    @keyframes blood-drop {
+      to {
+        top: 120vh;
+      }
+    }
+
     .card-page {
       display: flex;
       align-items: center;
@@ -552,6 +618,7 @@
       <feDisplacementMap in="SourceGraphic" in2="warp" scale="1" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
+  <div class="bloods" aria-hidden="true"></div>
   <div class="brand">
     <button type="button" class="wordmark" aria-label="Skift mellem forside og bagside af visitkortet">ok<span class="wm-k">k</span>ergok<span class="wm-k">k</span>er</button>
     <input class="cheat-code" type="text" placeholder="cheat code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Cheat code">
@@ -655,6 +722,7 @@
     const dragHint = document.querySelector('.drag-hint');
     const cheatCode = document.querySelector('.cheat-code');
     const dorsiaCard = document.querySelector('.dorsia-card');
+    const bloods = document.querySelector('.bloods');
 
     backInner.insertBefore(asciiArt, backInner.firstChild);
 
@@ -1242,6 +1310,36 @@
 
     document.querySelector('.wordmark').addEventListener('click', () => snapToFlatFace());
 
+    function startBloodDrips() {
+      if (bloods.classList.contains('active')) return;
+      const count = window.matchMedia('(max-width: 768px)').matches ? 70 : 140;
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('span');
+        el.className = 'blood';
+        const width = (Math.random() * 0.22 + 0.06).toFixed(3);
+        const shade = Math.random() * 12;
+        const blood = `hsl(0, 78%, ${32 - shade * 0.4}%)`;
+        const darkBlood = `hsl(0, 82%, ${24 - shade * 0.35}%)`;
+        const tip = `hsl(0, 85%, ${20 - shade * 0.3}%)`;
+        const dripTime = (Math.random() * 8 + 5).toFixed(2);
+        const dripDelay = (Math.random() * 7).toFixed(2);
+        const dropTime = (Math.random() * 8 + 12).toFixed(2);
+        el.style.width = `${width}em`;
+        el.style.setProperty('--drop-size', `${width}em`);
+        el.style.setProperty('--blood', blood);
+        el.style.setProperty('--blood-dark', darkBlood);
+        el.style.setProperty('--blood-tip', tip);
+        el.style.setProperty('--drip-time', `${dripTime}s`);
+        el.style.setProperty('--drip-delay', `${dripDelay}s`);
+        el.style.setProperty('--drop-time', `${dropTime}s`);
+        el.style.setProperty('--drop-delay', `${(parseFloat(dripDelay) + parseFloat(dripTime) * 0.85).toFixed(2)}s`);
+        frag.appendChild(el);
+      }
+      bloods.appendChild(frag);
+      bloods.classList.add('active');
+    }
+
     function activateDorsia() {
       if (card.classList.contains('dorsia-mode') || card.dataset.dorsiaLoading === '1') return;
       card.dataset.dorsiaLoading = '1';
@@ -1253,6 +1351,7 @@
       const finishFront = () => {
         card.classList.add('dorsia-ready');
         delete card.dataset.dorsiaLoading;
+        startBloodDrips();
       };
 
       const startDorsia = () => {
