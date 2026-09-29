@@ -45,7 +45,7 @@
       touch-action: none;
     }
 
-    /* Persistent wordmark in the top-left corner. */
+    
     .wordmark {
       position: fixed;
       top: 0;
@@ -88,7 +88,7 @@
       overflow: hidden;
     }
 
-    /* ---- Draggable 3D business card (front: horse animation, back: text) ---- */
+    
     .card-scene {
       display: flex;
       flex-direction: column;
@@ -122,8 +122,7 @@
       opacity: 0;
     }
 
-    /* Soft cast shadow behind the card; JS shifts/scales it with the card's
-       tilt so it reads as a real, light-driven shadow while dragging. */
+    
     .card-shadow {
       position: absolute;
       inset: 0;
@@ -144,8 +143,7 @@
       z-index: 1;
       width: 100%;
       height: 100%;
-      /* Physical card thickness (front/back sit half of this apart in Z, and the
-         four edge strips span it). --half-w/--half-h are set from JS. */
+      
       --card-thickness: 3px;
       transform-style: preserve-3d;
       transform: rotateX(0deg) rotateY(0deg);
@@ -166,7 +164,7 @@
       transition: none;
     }
 
-    /* Drag cursor everywhere on the card, including over the email link. */
+    
     .card a {
       cursor: inherit;
     }
@@ -178,17 +176,15 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      /* Broken-white card stock. The rough-paper grain is layered on top by the
-         ::before overlay (SVG #roughpaper filter, multiplied onto this color). */
+      
       background-color: #f1ede1;
-      /* Warp the whole face so the paper edge looks torn/worn, not a crisp rect. */
+      
       filter: url(#roughedge);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
 
-    /* Rough-paper texture: an SVG lighting filter turned into a bumpy grey
-       surface, multiplied over the card colour so the stock keeps its tint. */
+    
     .card-face::before {
       content: "";
       position: absolute;
@@ -201,8 +197,7 @@
     }
 
     .card-front {
-      /* Sits half the thickness in front of the card plane (also keeps oblique
-         clicks hitting the face/link, and stops WebKit bleeding through). */
+      
       transform: rotateY(0deg) translateZ(calc(var(--card-thickness) / 2));
       pointer-events: auto;
     }
@@ -213,8 +208,7 @@
       pointer-events: none;
     }
 
-    /* The four cut edges of the card that give it a visible thickness. Their
-       colour is a touch darker than the face so the edge reads as paper stock. */
+    
     .card-edge {
       position: absolute;
       background: #ddd6c5;
@@ -299,12 +293,16 @@
       position: absolute;
       right: clamp(14px, 3%, 28px);
       bottom: clamp(14px, 3%, 28px);
-      width: clamp(30px, 7vw, 64px);
+      width: clamp(36px, 8vw, 72px);
       height: auto;
-      z-index: 2;
-      opacity: 0.2;
+      z-index: 4;
+      opacity: 0.28;
       pointer-events: none;
       user-select: none;
+      
+      transform: rotateY(0deg) translateZ(calc(var(--card-thickness) / 2 + 1px));
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .intro-text {
@@ -335,9 +333,7 @@
       transition: transform 0.2s ease;
     }
 
-    /* Desktop (hover-capable pointer): hovering the email — but NOT while the
-       card is being dragged — enlarges it and shows the click cursor. Touch
-       devices (hover: none) get no enlarge; the link is simply tappable. */
+    
     @media (hover: hover) {
       .card:not(.dragging) .intro-text a:hover {
         cursor: pointer;
@@ -350,9 +346,7 @@
         display: block;
       }
 
-      /* The card is too narrow for a side-by-side layout, so stack the cowboy
-         above the contact text and let the text use the full width. Tighten the
-         text so the cowboy still gets a usable amount of room. */
+      
       .card-back {
         padding: 10px;
       }
@@ -383,7 +377,7 @@
         <feDistantLight azimuth="45" elevation="60" />
       </feDiffuseLighting>
     </filter>
-    <!-- Ragged, worn paper edge: warp the card outline with fractal noise. -->
+    
     <filter id="roughedge">
       <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="4" seed="8" result="warp" />
       <feDisplacementMap in="SourceGraphic" in2="warp" scale="1" xChannelSelector="R" yChannelSelector="G" />
@@ -437,8 +431,7 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⠄⠀⠀⠙⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
       <canvas class="horse-canvas" aria-hidden="true"></canvas>
-      <img class="card-logo" src="kk-logo.png" alt="" aria-hidden="true">
-    </div><!-- .card-front -->
+    </div>
     <div class="card-face card-back">
     <div class="back-inner">
     <div class="intro-text">
@@ -447,16 +440,17 @@
       <p>Need a new sheriff online?</p>
       <p>Contact me at: <a href="mailto:howdy@okkergokker.dk">howdy@okkergokker.dk</a></p>
     </div>
-    </div><!-- .back-inner -->
-    </div><!-- .card-back -->
+    </div>
+    </div>
+    <img class="card-logo" src="kk-logo.png" alt="" aria-hidden="true">
     <div class="card-edge card-edge-l" aria-hidden="true"></div>
     <div class="card-edge card-edge-r" aria-hidden="true"></div>
     <div class="card-edge card-edge-t" aria-hidden="true"></div>
     <div class="card-edge card-edge-b" aria-hidden="true"></div>
-    </div><!-- .card -->
-    </div><!-- .card-stage -->
+    </div>
+    </div>
     <p class="drag-hint" aria-hidden="true">Drag me!</p>
-    </div><!-- .card-scene -->
+    </div>
   </section>
   <script>
     const asciiArt = document.querySelector('.ascii-art');
@@ -473,15 +467,12 @@
     const horseCanvas = document.querySelector('.horse-canvas');
     const dragHint = document.querySelector('.drag-hint');
 
-    // The cowboy portrait lives on the text side, beside the contact details.
     backInner.insertBefore(asciiArt, backInner.firstChild);
 
     let lockedWidth = window.innerWidth;
     let horseOn = false;
     let isDraggingCard = false;
 
-    // Position the card's edge strips at the real half-width/half-height so the
-    // thickness lines up with the (responsive) card size.
     function updateCardThickness() {
       const r = cardStage.getBoundingClientRect();
       card.style.setProperty('--half-w', `${r.width / 2}px`);
@@ -501,10 +492,6 @@
       onLayoutChange();
     }
 
-    // Fit the cowboy portrait on the text side of the card. Desktop lays it out
-    // beside the text (row): cowboy at full height, capped to 40% width. Mobile
-    // stacks it above the full-width text (column): cowboy fills the height left
-    // over once the text has taken what it needs.
     function fitContent() {
       if (!cardBack) return;
       const cs = getComputedStyle(cardBack);
@@ -538,12 +525,8 @@
       }
     }
 
-    // The card is the whole page now, so start the horse shortly after load.
     setTimeout(activateHorse, 500);
 
-    // ---- Galloping-horse ASCII animation (ported from lunar-horse.webflow.io) ----
-    // Renders a sequence of horse silhouette frames as live ASCII on the canvas.
-    // White glyphs on transparent background; cursor "repels" the glyphs on hover.
     const horse = (() => {
       const canvas = horseCanvas;
       const ctx = canvas.getContext('2d', { alpha: true });
@@ -600,9 +583,6 @@
       const luminance = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
       const clamp01 = (t) => Math.max(0, Math.min(1, t));
 
-      // Hover repel removed: the horse renders as a plain animation with no
-      // cursor interaction (isHovering stays false, so renderGlyphs skips it).
-
       function buildAppearDelays() {
         const n = cols * rows;
         appearDelay = new Float32Array(n);
@@ -631,12 +611,8 @@
         return luminance(data[j], data[j + 1], data[j + 2]);
       }
 
-      // Square cells derived from the actual canvas box, so the landscape horse
-      // is not distorted inside the portrait area the cowboy occupies.
       function resize() {
-        // Use layout (offset) size, not getBoundingClientRect: the card can be
-        // 3D-rotated, which shrinks the projected client rect and would make the
-        // grid re-randomize and re-fade every frame while dragging.
+
         const rectW = canvas.offsetWidth;
         const rectH = canvas.offsetHeight;
         if (rectW < 10 || rectH < 10) return;
@@ -644,9 +620,6 @@
         const w = Math.floor(rectW * DPR);
         const h = Math.floor(rectH * DPR);
 
-        // Only touch canvas.width/height when they actually change: assigning
-        // either reallocates and clears the whole bitmap, so skipping it every
-        // steady-state tick avoids megabytes of needless work per frame.
         if (canvas.width !== w || canvas.height !== h) {
           canvas.width = w;
           canvas.height = h;
@@ -659,7 +632,6 @@
 
           fontSize = Math.max(6, Math.min(18, Math.round(Math.min(cellW, cellH) * 1.45)));
 
-          // Assigning canvas.width/height resets the 2D context, so re-apply state.
           ctx.textBaseline = 'top';
           ctx.font = `${fontSize}px "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
           ctx.imageSmoothingEnabled = false;
@@ -711,8 +683,6 @@
         offCtx.drawImage(img, dx, dy, dw, dh);
       }
 
-      // The rasterised frame only changes when the frame index or grid size
-      // changes, so cache it instead of recomputing getImageData every tick.
       function prepareData() {
         const key = frameIndex + ':' + cols + ':' + rows;
         if (key === dataKey && dataCache) return;
@@ -842,8 +812,6 @@
         done?.();
       }
 
-      // The canvas now fills the fixed card front via CSS (inset), so there is
-      // no box to size here — just force a re-raster on the next frame.
       function syncLayout() {
         dataKey = '';
       }
@@ -895,8 +863,7 @@
 
       return {
         start, stop, fadeOut, syncLayout, clearLayout,
-        // Fires once the frame images have finished loading (immediately if
-        // they already have).
+
         onReady(cb) { if (ready) cb(); else onReadyCb = cb; }
       };
     })();
@@ -913,10 +880,6 @@
       });
     }
 
-    // ---- Drag to rotate the 3D card (front = horse, back = contact text) ----
-    // rotX/rotY is what's shown; targetRotX/Y is where the drag wants it. The
-    // shown value eases toward the target each frame, so the card has weight —
-    // it lags the finger but catches up more quickly after release.
     let rotX = 0;
     let rotY = 0;
     let targetRotX = 0;
@@ -946,8 +909,6 @@
       updateCardShadow();
     }
 
-    // Drive the cast shadow from the card's tilt: it slides opposite the turn
-    // and grows/softens as the card leans away, like a light fixed above-front.
     function updateCardShadow() {
       const rad = Math.PI / 180;
       const w = cardStage.clientWidth;
@@ -971,8 +932,7 @@
       ];
 
       const points = corners.map(([x, y]) => {
-        // CSS applies rotateY first, then rotateX. Project those transformed
-        // corners through the stage's 1400px perspective onto the page plane.
+
         const px = x * cosY;
         const py = y * cosX + x * sinY * sinX;
         const pz = y * sinX - x * sinY * cosX;
@@ -1145,8 +1105,7 @@
       const dx = e.clientX - dragStartX;
       const dy = e.clientY - dragStartY;
       if (!dragMoved) {
-        // Wait for a real drag before hijacking the gesture, so a plain tap on
-        // the back's email link still registers as a click.
+
         if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
         dragMoved = true;
         isDraggingCard = true;
@@ -1171,8 +1130,7 @@
       if (!dragMoved) return;
       dragMoved = false;
       isDraggingCard = false;
-      // Leave .dragging on until the glide settles (inertiaStep clears it), so
-      // the CSS transition doesn't fight the easing.
+
       startInertia();
       if (card.hasPointerCapture(e.pointerId)) card.releasePointerCapture(e.pointerId);
     }
