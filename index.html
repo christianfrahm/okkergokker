@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/copperplate-gothic-light" rel="stylesheet">
   <script>
     if (location.hash) {
       history.replaceState(null, '', location.pathname + location.search);
@@ -46,12 +47,19 @@
     }
 
     
-    .wordmark {
+    .brand {
       position: fixed;
       top: 0;
       left: 0;
       z-index: 100;
       margin: 14px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .wordmark {
       padding: 0;
       border: none;
       background: none;
@@ -73,6 +81,40 @@
     @media (hover: hover) {
       .wordmark:hover .wm-k {
         transform: scaleX(-1);
+      }
+    }
+
+    .cheat-code {
+      width: 11ch;
+      max-width: 40vw;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-bottom: 1px solid rgba(241, 237, 225, 0.25);
+      border-radius: 0;
+      background: transparent;
+      font-family: "Courier Prime", Courier, monospace;
+      font-size: clamp(0.7rem, 2.2vw, 0.85rem);
+      line-height: 1.4;
+      color: #f1ede1;
+      caret-color: #f1ede1;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .cheat-code::placeholder {
+      color: #f1ede1;
+      opacity: 0.35;
+    }
+
+    .cheat-code:focus {
+      border-bottom-color: rgba(241, 237, 225, 0.55);
+    }
+
+    @media (max-width: 768px) {
+      .cheat-code {
+        display: none;
       }
     }
 
@@ -289,22 +331,6 @@
       pointer-events: auto;
     }
 
-    .card-logo {
-      position: absolute;
-      right: clamp(14px, 3%, 28px);
-      bottom: clamp(14px, 3%, 28px);
-      width: clamp(36px, 8vw, 72px);
-      height: auto;
-      z-index: 4;
-      opacity: 0.28;
-      pointer-events: none;
-      user-select: none;
-      
-      transform: rotateY(0deg) translateZ(calc(var(--card-thickness) / 2 + 1px));
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-    }
-
     .intro-text {
       color: #1b1a17;
       font-family: "Courier Prime", Courier, monospace;
@@ -367,6 +393,149 @@
         margin-top: 0.6em;
       }
     }
+
+    .dorsia-card {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      color: rgb(78, 65, 53);
+      font-family: "Copperplate Gothic Light", "Copperplate Gothic", Copperplate, serif;
+      font-size: clamp(1.25rem, 3.7vw, 2.3rem);
+      text-transform: uppercase;
+      line-height: 1.2;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .dorsia-card > * {
+      text-shadow: 1px 1px 0px #fff;
+    }
+
+    .card.dorsia-mode .card-back {
+      padding: 0;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.55), rgba(230, 230, 230, 0.55)),
+        #f4f1ea;
+      box-shadow: inset 1px 1px 3px #fff;
+    }
+
+    .card.dorsia-mode .card-back::before {
+      opacity: 0.18;
+    }
+
+    .card.dorsia-mode .back-inner {
+      display: none;
+    }
+
+    .card.dorsia-mode .dorsia-card {
+      display: flex;
+    }
+
+    .card.dorsia-ready .card-front {
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.55), rgba(230, 230, 230, 0.55)),
+        #f4f1ea;
+      box-shadow: inset 1px 1px 3px #fff;
+    }
+
+    .card.dorsia-ready .card-front::before {
+      opacity: 0.18;
+    }
+
+    .card.dorsia-ready .card-edge {
+      background: #e8e2d4;
+    }
+
+    .card.dorsia-ready .card-front.horse-active .horse-canvas {
+      opacity: 0 !important;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .dorsia-card .top {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 0.55em 1.1em 0;
+    }
+
+    .dorsia-card .phone {
+      font-size: 1em;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .dorsia-card .top-right {
+      text-align: center;
+    }
+
+    .dorsia-card .firm {
+      font-size: 0.833em;
+    }
+
+    .dorsia-card .department {
+      font-size: 0.5em;
+    }
+
+    .dorsia-card .middle {
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.55em;
+      gap: 0;
+    }
+
+    .dorsia-card .name {
+      line-height: 1;
+    }
+
+    .dorsia-card .name span {
+      font-size: 0.92em;
+      font-weight: bold;
+    }
+
+    .dorsia-card .title {
+      font-size: 0.62em;
+      letter-spacing: -0.04em;
+      font-weight: bold;
+      margin-top: 0.18em;
+      line-height: 1;
+    }
+
+    .dorsia-card .title span {
+      font-size: 0.88em;
+      font-weight: bold;
+    }
+
+    .dorsia-card .bottom {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.667em;
+      padding: 0 0 0.7em;
+      text-align: center;
+    }
+
+    .dorsia-card .address span {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .dorsia-card {
+        font-size: 1.05rem;
+      }
+
+      .dorsia-card .top {
+        padding: 0.55em 0.9em 0;
+      }
+
+      .dorsia-card .bottom {
+        padding-bottom: 0.65em;
+      }
+    }
   </style>
 </head>
 <body>
@@ -383,7 +552,10 @@
       <feDisplacementMap in="SourceGraphic" in2="warp" scale="1" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
-  <button type="button" class="wordmark" aria-label="Skift mellem forside og bagside af visitkortet">ok<span class="wm-k">k</span>ergok<span class="wm-k">k</span>er</button>
+  <div class="brand">
+    <button type="button" class="wordmark" aria-label="Skift mellem forside og bagside af visitkortet">ok<span class="wm-k">k</span>ergok<span class="wm-k">k</span>er</button>
+    <input class="cheat-code" type="text" placeholder="cheat code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Cheat code">
+  </div>
   <section class="card-page">
     <div class="card-scene">
     <div class="card-stage">
@@ -441,8 +613,23 @@
       <p>Contact me at: <a href="mailto:howdy@okkergokker.dk">howdy@okkergokker.dk</a></p>
     </div>
     </div>
+    <div class="dorsia-card" aria-hidden="true">
+      <div class="top">
+        <div class="phone">212.555.6342</div>
+        <div class="top-right">
+          <div class="firm">Pierce &amp; Pierce</div>
+          <div class="department">Mergers and Aquisitions</div>
+        </div>
+      </div>
+      <div class="middle">
+        <div class="name">P<span>aul</span> Allen</div>
+        <div class="title">V<span>ice</span> P<span>resident</span></div>
+      </div>
+      <div class="bottom">
+        <div class="address">358 Exchange Place New York, N.Y. 10099 <span>Fax 212 555 6390 Telex 10 4534</span></div>
+      </div>
     </div>
-    <img class="card-logo" src="kk-logo.png" alt="" aria-hidden="true">
+    </div>
     <div class="card-edge card-edge-l" aria-hidden="true"></div>
     <div class="card-edge card-edge-r" aria-hidden="true"></div>
     <div class="card-edge card-edge-t" aria-hidden="true"></div>
@@ -466,6 +653,8 @@
     const cardShadowBlur = document.querySelector('.card-shadow-blur');
     const horseCanvas = document.querySelector('.horse-canvas');
     const dragHint = document.querySelector('.drag-hint');
+    const cheatCode = document.querySelector('.cheat-code');
+    const dorsiaCard = document.querySelector('.dorsia-card');
 
     backInner.insertBefore(asciiArt, backInner.firstChild);
 
@@ -991,7 +1180,7 @@
       return Math.abs(rotX) < 2 && Math.abs(normalized - 180) < 2;
     }
 
-    function snapToFlatFace() {
+    function snapToFlatFace(onComplete) {
       if (snapRaf) cancelAnimationFrame(snapRaf);
       if (hintTiltRaf) {
         cancelAnimationFrame(hintTiltRaf);
@@ -1045,12 +1234,56 @@
         applyCardTransform();
         snapRaf = 0;
         card.classList.remove('hint-tilting');
+        if (typeof onComplete === 'function') onComplete();
       }
 
       snapRaf = requestAnimationFrame(step);
     }
 
-    document.querySelector('.wordmark').addEventListener('click', snapToFlatFace);
+    document.querySelector('.wordmark').addEventListener('click', () => snapToFlatFace());
+
+    function activateDorsia() {
+      if (card.classList.contains('dorsia-mode') || card.dataset.dorsiaLoading === '1') return;
+      card.dataset.dorsiaLoading = '1';
+      cheatCode.value = 'dorsia';
+      cheatCode.blur();
+      dragHint.classList.add('hidden');
+      cardScene.classList.add('flipped-once');
+
+      const finishFront = () => {
+        card.classList.add('dorsia-ready');
+        delete card.dataset.dorsiaLoading;
+      };
+
+      const startDorsia = () => {
+        card.classList.add('dorsia-mode');
+        dorsiaCard.setAttribute('aria-hidden', 'false');
+        if (isFlatOnBack()) {
+          finishFront();
+          return;
+        }
+        snapToFlatFace(finishFront);
+      };
+
+      const fontReady = document.fonts?.load
+        ? document.fonts.load('400 24px "Copperplate Gothic Light"').catch(() => {})
+        : Promise.resolve();
+      Promise.resolve(fontReady).then(startDorsia);
+    }
+
+    function checkCheatCode() {
+      if (window.matchMedia('(max-width: 768px)').matches) return;
+      if (cheatCode.value.trim().toLowerCase() === 'dorsia') {
+        activateDorsia();
+      }
+    }
+
+    cheatCode.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      checkCheatCode();
+    });
+    cheatCode.addEventListener('pointerdown', (e) => e.stopPropagation());
 
     function inertiaStep() {
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
