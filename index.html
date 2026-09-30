@@ -1710,11 +1710,16 @@
       snapToFlatFace(begin, targetSide);
     }
 
+    // Cheats — desktop only: type code + Enter
+    const CHEATS = {
+      dorsia: activateDorsia,
+      snake: activateSnake,
+    };
+
     function checkCheatCode() {
       if (window.matchMedia('(max-width: 768px)').matches) return;
-      const code = cheatCode.value.trim().toLowerCase();
-      if (code === 'dorsia') activateDorsia();
-      else if (code === 'snake') activateSnake();
+      const run = CHEATS[cheatCode.value.trim().toLowerCase()];
+      if (run) run();
     }
 
     cheatCode.addEventListener('keydown', (e) => {
