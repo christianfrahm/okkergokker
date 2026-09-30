@@ -326,6 +326,92 @@
       pointer-events: auto;
     }
 
+    .snake-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      width: 100%;
+      height: 100%;
+      color: #1b1a17;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .card.snake-mode .snake-canvas {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .card.snake-mode {
+      cursor: default;
+    }
+
+    .card.snake-on-front .card-front,
+    .card.snake-on-back .card-back {
+      padding: 0;
+    }
+
+    .card.snake-on-back .card-back {
+      pointer-events: auto;
+    }
+
+    .card.snake-on-back .back-inner {
+      display: none;
+    }
+
+    .card.snake-on-front .ascii-art,
+    .card.snake-on-front .card-front.horse-active .horse-canvas {
+      opacity: 0 !important;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .snake-over {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 7;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75em;
+      pointer-events: none;
+      font-family: "Courier Prime", Courier, monospace;
+      color: #1b1a17;
+      text-align: center;
+    }
+
+    .card.snake-mode.snake-dead .snake-over {
+      display: flex;
+      pointer-events: auto;
+    }
+
+    .snake-over-score {
+      font-size: clamp(0.95rem, 2.4vw, 1.35rem);
+    }
+
+    .snake-over-retry {
+      border: none;
+      background: none;
+      padding: 0;
+      font-family: "Courier Prime", Courier, monospace;
+      font-size: clamp(0.85rem, 2vw, 1.15rem);
+      color: #1b1a17;
+      text-decoration: underline;
+      cursor: pointer;
+      display: inline-block;
+      transform-origin: center center;
+      transition: transform 0.2s ease;
+    }
+
+    @media (hover: hover) {
+      .snake-over-retry:hover {
+        transform: scale(1.2);
+      }
+    }
+
     .intro-text {
       color: #1b1a17;
       font-family: "Courier Prime", Courier, monospace;
@@ -645,6 +731,11 @@
     <div class="card-edge card-edge-r" aria-hidden="true"></div>
     <div class="card-edge card-edge-t" aria-hidden="true"></div>
     <div class="card-edge card-edge-b" aria-hidden="true"></div>
+    <canvas class="snake-canvas" aria-hidden="true"></canvas>
+    <div class="snake-over" aria-hidden="true">
+      <div class="snake-over-score"></div>
+      <button type="button" class="snake-over-retry">try again</button>
+    </div>
     </div>
     </div>
     <p class="drag-hint" aria-hidden="true">Drag me!</p>
@@ -666,6 +757,10 @@
     const dragHint = document.querySelector('.drag-hint');
     const cheatCode = document.querySelector('.cheat-code');
     const dorsiaCard = document.querySelector('.dorsia-card');
+    const snakeCanvas = document.querySelector('.snake-canvas');
+    const snakeOver = document.querySelector('.snake-over');
+    const snakeOverScore = document.querySelector('.snake-over-score');
+    const snakeOverRetry = document.querySelector('.snake-over-retry');
 
     backInner.insertBefore(asciiArt, backInner.firstChild);
 
@@ -1080,6 +1175,281 @@
       });
     }
 
+    const snakeGame = (() => {
+      const COLS = 32;
+      const ROWS = 20;
+      const EMPTY = 0;
+      const SNAKE = 1;
+      const FRUIT = 2;
+      const LEFT = 0;
+      const UP = 1;
+      const RIGHT = 2;
+      const DOWN = 3;
+      const APPEAR_FADE_MS = 150;
+      const APPEAR_GAP_MS = 1250;
+      const STEP_FRAMES = 7;
+      const RAMP = " .'`^,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
+      const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+      const canvas = snakeCanvas;
+      const ctx = canvas.getContext('2d', { alpha: true });
+      const off = document.createElement('canvas');
+      const offCtx = off.getContext('2d', { willReadFrequently: true });
+
+      let grid = [];
+      let queue = [];
+      let direction = UP;
+      let pendingDir = UP;
+      let score = 0;
+      let frames = 0;
+      let running = false;
+      let dead = false;
+      let introducing = false;
+      let introStartTime = 0;
+      let appearDelay = null;
+      let rafId = 0;
+      let asciiCols = 96;
+      let asciiRows = 60;
+      let cellW = 1;
+      let cellH = 1;
+      let fontSize = 8;
+      const keystate = {};
+
+      function buildAppearDelays() {
+        const n = asciiCols * asciiRows;
+        appearDelay = new Float32Array(n);
+        for (let i = 0; i < n; i++) {
+          appearDelay[i] = Math.random() * APPEAR_GAP_MS;
+        }
+      }
+
+      function cellAlpha(elapsedMs, idx) {
+        if (!introducing || !appearDelay) return 1;
+        const t = elapsedMs - appearDelay[idx];
+        if (t <= 0) return 0;
+        return Math.max(0, Math.min(1, t / APPEAR_FADE_MS));
+      }
+
+      function resize() {
+        const rectW = canvas.offsetWidth;
+        const rectH = canvas.offsetHeight;
+        if (rectW < 10 || rectH < 10) return;
+        const w = Math.floor(rectW * DPR);
+        const h = Math.floor(rectH * DPR);
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+          const cell = 5 * DPR;
+          const prevCols = asciiCols;
+          const prevRows = asciiRows;
+          asciiCols = Math.max(48, Math.min(160, Math.round(canvas.width / cell)));
+          cellW = canvas.width / asciiCols;
+          asciiRows = Math.max(1, Math.round(canvas.height / cellW));
+          cellH = canvas.height / asciiRows;
+          fontSize = Math.max(6, Math.min(18, Math.round(Math.min(cellW, cellH) * 1.45)));
+          ctx.textBaseline = 'top';
+          ctx.font = `${fontSize}px "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+          ctx.imageSmoothingEnabled = false;
+          if (introducing && (asciiCols !== prevCols || asciiRows !== prevRows)) {
+            buildAppearDelays();
+          }
+        }
+      }
+
+      function setCell(x, y, val) {
+        grid[x][y] = val;
+      }
+
+      function getCell(x, y) {
+        return grid[x][y];
+      }
+
+      function setFood() {
+        const empty = [];
+        for (let x = 0; x < COLS; x++) {
+          for (let y = 0; y < ROWS; y++) {
+            if (getCell(x, y) === EMPTY) empty.push({ x, y });
+          }
+        }
+        if (!empty.length) return;
+        const pos = empty[Math.floor(Math.random() * empty.length)];
+        setCell(pos.x, pos.y, FRUIT);
+      }
+
+      function reset(withIntro) {
+        score = 0;
+        direction = UP;
+        pendingDir = UP;
+        frames = 0;
+        dead = false;
+        card.classList.remove('snake-dead');
+        snakeOver.setAttribute('aria-hidden', 'true');
+        grid = Array.from({ length: COLS }, () => Array(ROWS).fill(EMPTY));
+        const sx = Math.floor(COLS / 2);
+        const sy = ROWS - 1;
+        queue = [{ x: sx, y: sy }];
+        setCell(sx, sy, SNAKE);
+        setFood();
+        if (withIntro) {
+          introducing = true;
+          introStartTime = performance.now();
+          resize();
+          buildAppearDelays();
+        } else {
+          introducing = false;
+        }
+      }
+
+      function die() {
+        dead = true;
+        snakeOverScore.textContent = `SCORE: ${score}`;
+        snakeOver.setAttribute('aria-hidden', 'false');
+        card.classList.add('snake-dead');
+      }
+
+      function drawGameBuffer() {
+        off.width = COLS;
+        off.height = ROWS;
+        offCtx.fillStyle = '#f1ede1';
+        offCtx.fillRect(0, 0, COLS, ROWS);
+        for (let x = 0; x < COLS; x++) {
+          for (let y = 0; y < ROWS; y++) {
+            const cell = getCell(x, y);
+            if (cell === EMPTY) continue;
+            offCtx.fillStyle = cell === FRUIT ? '#1b1a17' : '#2a2824';
+            if (cell === FRUIT) {
+              offCtx.fillStyle = '#000';
+            }
+            offCtx.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+
+      function renderAscii() {
+        resize();
+        drawGameBuffer();
+        let data;
+        try {
+          data = offCtx.getImageData(0, 0, COLS, ROWS).data;
+        } catch (e) {
+          return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = getComputedStyle(canvas).color || '#1b1a17';
+        const rampLen = RAMP.length - 1;
+        const introElapsed = performance.now() - introStartTime;
+
+        for (let y = 0; y < asciiRows; y++) {
+          for (let x = 0; x < asciiCols; x++) {
+            const gx = Math.min(COLS - 1, Math.floor((x + 0.5) / asciiCols * COLS));
+            const gy = Math.min(ROWS - 1, Math.floor((y + 0.5) / asciiRows * ROWS));
+            const i = (gy * COLS + gx) * 4;
+            const L = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+            const tShade = Math.max(0, Math.min(1, 1 - L / 255));
+            if (tShade < 0.08) continue;
+            const idx = y * asciiCols + x;
+            const a = cellAlpha(introElapsed, idx);
+            if (a <= 0) continue;
+            const ch = RAMP[Math.round(tShade * rampLen)];
+            ctx.globalAlpha = (0.35 + tShade * 0.65) * a;
+            ctx.fillText(ch, Math.round(x * cellW), Math.round(y * cellH));
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        if (introducing && introElapsed >= APPEAR_GAP_MS + APPEAR_FADE_MS) {
+          introducing = false;
+        }
+      }
+
+      function stepGame() {
+        if (dead || introducing) return;
+        direction = pendingDir;
+        let nx = queue[0].x;
+        let ny = queue[0].y;
+        if (direction === LEFT) nx--;
+        else if (direction === UP) ny--;
+        else if (direction === RIGHT) nx++;
+        else if (direction === DOWN) ny++;
+
+        if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS || getCell(nx, ny) === SNAKE) {
+          die();
+          return;
+        }
+
+        if (getCell(nx, ny) === FRUIT) {
+          score++;
+          setFood();
+        } else {
+          const tail = queue.pop();
+          setCell(tail.x, tail.y, EMPTY);
+        }
+        setCell(nx, ny, SNAKE);
+        queue.unshift({ x: nx, y: ny });
+      }
+
+      function readKeys() {
+        if (dead || introducing) return;
+        if (keystate[37] && direction !== RIGHT) pendingDir = LEFT;
+        if (keystate[38] && direction !== DOWN) pendingDir = UP;
+        if (keystate[39] && direction !== LEFT) pendingDir = RIGHT;
+        if (keystate[40] && direction !== UP) pendingDir = DOWN;
+      }
+
+      function loop() {
+        if (!running) return;
+        frames++;
+        readKeys();
+        if (frames % STEP_FRAMES === 0) stepGame();
+        renderAscii();
+        rafId = requestAnimationFrame(loop);
+      }
+
+      function onKeyDown(e) {
+        if (!running) return;
+        if ([37, 38, 39, 40].includes(e.keyCode)) {
+          e.preventDefault();
+          keystate[e.keyCode] = true;
+        }
+      }
+
+      function onKeyUp(e) {
+        delete keystate[e.keyCode];
+      }
+
+      function onRetry() {
+        reset(false);
+      }
+
+      function start() {
+        if (running) return;
+        running = true;
+        reset(true);
+        resize();
+        addEventListener('keydown', onKeyDown);
+        addEventListener('keyup', onKeyUp);
+        snakeOverRetry.addEventListener('click', onRetry);
+        rafId = requestAnimationFrame(loop);
+      }
+
+      function stop() {
+        running = false;
+        dead = false;
+        introducing = false;
+        card.classList.remove('snake-dead', 'snake-mode', 'snake-on-front', 'snake-on-back');
+        snakeOver.setAttribute('aria-hidden', 'true');
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = 0;
+        removeEventListener('keydown', onKeyDown);
+        removeEventListener('keyup', onKeyUp);
+        snakeOverRetry.removeEventListener('click', onRetry);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      return { start, stop };
+    })();
+
     let rotX = 0;
     let rotY = 0;
     let targetRotX = 0;
@@ -1306,11 +1676,50 @@
       Promise.resolve(fontReady).then(startDorsia);
     }
 
+    function activateSnake() {
+      if (card.classList.contains('snake-mode') ||
+          card.classList.contains('snake-on-front') ||
+          card.classList.contains('snake-on-back') ||
+          card.dataset.snakeLoading === '1') return;
+      if (card.classList.contains('dorsia-on-front') ||
+          card.classList.contains('dorsia-on-back') ||
+          card.dataset.dorsiaLoading === '1') return;
+
+      card.dataset.snakeLoading = '1';
+      cheatCode.value = 'snake';
+      cheatCode.blur();
+      dragHint.classList.add('hidden');
+      cardScene.classList.add('flipped-once');
+
+      const placeOnBack = isFrontFacing();
+      const sideClass = placeOnBack ? 'snake-on-back' : 'snake-on-front';
+      const targetSide = placeOnBack ? 'back' : 'front';
+      const host = placeOnBack ? cardBack : cardFront;
+
+      host.appendChild(snakeCanvas);
+      host.appendChild(snakeOver);
+      card.classList.add(sideClass);
+      if (!placeOnBack) horse.fadeOut();
+
+      const begin = () => {
+        card.classList.add('snake-mode');
+        delete card.dataset.snakeLoading;
+        snakeGame.start();
+      };
+
+      const alreadyThere = placeOnBack ? isFlatOnBack() : isFlatOnFront();
+      if (alreadyThere) {
+        begin();
+        return;
+      }
+      snapToFlatFace(begin, targetSide);
+    }
+
     function checkCheatCode() {
       if (window.matchMedia('(max-width: 768px)').matches) return;
-      if (cheatCode.value.trim().toLowerCase() === 'dorsia') {
-        activateDorsia();
-      }
+      const code = cheatCode.value.trim().toLowerCase();
+      if (code === 'dorsia') activateDorsia();
+      else if (code === 'snake') activateSnake();
     }
 
     cheatCode.addEventListener('keydown', (e) => {
@@ -1346,6 +1755,7 @@
     }
 
     card.addEventListener('pointerdown', (e) => {
+      if (card.classList.contains('snake-mode')) return;
       if (dragPointerId !== null) return;
       if (snapRaf) {
         cancelAnimationFrame(snapRaf);
