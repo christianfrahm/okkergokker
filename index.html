@@ -368,6 +368,35 @@
       pointer-events: none;
     }
 
+    .card.snake-mode.snake-on-back .card-front,
+    .card.snake-mode.snake-on-front .card-back {
+      padding: 0;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.55), rgba(230, 230, 230, 0.55)),
+        #f4f1ea;
+      box-shadow: inset 1px 1px 3px #fff;
+    }
+
+    .card.snake-mode.snake-on-back .card-front::before,
+    .card.snake-mode.snake-on-front .card-back::before {
+      opacity: 0.18;
+    }
+
+    .card.snake-mode.snake-on-back .card-front.horse-active .horse-canvas,
+    .card.snake-mode.snake-on-back .ascii-art {
+      opacity: 0 !important;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .card.snake-mode.snake-on-front .back-inner {
+      display: none;
+    }
+
+    .card.snake-mode .card-edge {
+      background: #e8e2d4;
+    }
+
     .snake-over {
       display: none;
       position: absolute;
@@ -1694,7 +1723,7 @@
       host.appendChild(snakeCanvas);
       host.appendChild(snakeOver);
       card.classList.add(sideClass);
-      if (!placeOnBack) horse.fadeOut();
+      horse.fadeOut();
 
       const begin = () => {
         card.classList.add('snake-mode');
@@ -1710,7 +1739,6 @@
       snapToFlatFace(begin, targetSide);
     }
 
-    // Cheats — desktop only: type code + Enter
     const CHEATS = {
       dorsia: activateDorsia,
       snake: activateSnake,
