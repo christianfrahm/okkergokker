@@ -213,24 +213,10 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      
       background-color: #f1ede1;
-      
-      filter: url(#roughedge);
+      filter: url(#cardface);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-    }
-
-    
-    .card-face::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      filter: url(#roughpaper);
-      mix-blend-mode: multiply;
-      opacity: 0.5;
-      z-index: 3;
-      pointer-events: none;
     }
 
     .card-front {
@@ -348,53 +334,25 @@
       cursor: default;
     }
 
-    .card.snake-on-front .card-front,
-    .card.snake-on-back .card-back {
+    .card.snake-mode .card-face {
       padding: 0;
+      background-color: #f1ede1;
     }
 
     .card.snake-on-back .card-back {
       pointer-events: auto;
     }
 
-    .card.snake-on-back .back-inner {
-      display: none;
-    }
-
-    .card.snake-on-front .ascii-art,
-    .card.snake-on-front .card-front.horse-active .horse-canvas {
-      opacity: 0 !important;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .card.snake-mode.snake-on-back .card-front,
-    .card.snake-mode.snake-on-front .card-back {
-      padding: 0;
-      background:
-        linear-gradient(rgba(255, 255, 255, 0.55), rgba(230, 230, 230, 0.55)),
-        #f4f1ea;
-      box-shadow: inset 1px 1px 3px #fff;
-    }
-
-    .card.snake-mode.snake-on-back .card-front::before,
-    .card.snake-mode.snake-on-front .card-back::before {
-      opacity: 0.18;
-    }
-
-    .card.snake-mode.snake-on-back .card-front.horse-active .horse-canvas,
-    .card.snake-mode.snake-on-back .ascii-art {
-      opacity: 0 !important;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
+    .card.snake-on-back .back-inner,
     .card.snake-mode.snake-on-front .back-inner {
       display: none;
     }
 
-    .card.snake-mode .card-edge {
-      background: #e8e2d4;
+    .card.snake-mode .card-front.horse-active .horse-canvas,
+    .card.snake-mode .ascii-art {
+      opacity: 0 !important;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .snake-over {
@@ -526,11 +484,7 @@
         linear-gradient(rgba(255, 255, 255, 0.55), rgba(230, 230, 230, 0.55)),
         #f4f1ea;
       box-shadow: inset 1px 1px 3px #fff;
-    }
-
-    .card.dorsia-on-back .card-back::before,
-    .card.dorsia-on-front .card-front::before {
-      opacity: 0.18;
+      filter: url(#cardface-soft);
     }
 
     .card.dorsia-on-back .back-inner {
@@ -555,11 +509,7 @@
         linear-gradient(rgba(255, 255, 255, 0.55), rgba(230, 230, 230, 0.55)),
         #f4f1ea;
       box-shadow: inset 1px 1px 3px #fff;
-    }
-
-    .card.dorsia-ready.dorsia-on-back .card-front::before,
-    .card.dorsia-ready.dorsia-on-front .card-back::before {
-      opacity: 0.18;
+      filter: url(#cardface-soft);
     }
 
     .card.dorsia-ready .card-edge {
@@ -661,16 +611,25 @@
 </head>
 <body>
   <svg width="0" height="0" aria-hidden="true" style="position:absolute">
-    <filter id="roughpaper">
-      <feTurbulence type="fractalNoise" baseFrequency="0.04" result="noise" numOctaves="5" />
-      <feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2">
+    <filter id="cardface" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+      <feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2" result="paper">
         <feDistantLight azimuth="45" elevation="60" />
       </feDiffuseLighting>
-    </filter>
-    
-    <filter id="roughedge">
+      <feComposite operator="arithmetic" k1="1" k2="0" k3="0" k4="0" in="SourceGraphic" in2="paper" result="multiplied" />
+      <feComposite operator="arithmetic" k1="0" k2="0.5" k3="0.5" k4="0" in="multiplied" in2="SourceGraphic" result="textured" />
       <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="4" seed="8" result="warp" />
-      <feDisplacementMap in="SourceGraphic" in2="warp" scale="1" xChannelSelector="R" yChannelSelector="G" />
+      <feDisplacementMap in="textured" in2="warp" scale="1" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="cardface-soft" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+      <feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2" result="paper">
+        <feDistantLight azimuth="45" elevation="60" />
+      </feDiffuseLighting>
+      <feComposite operator="arithmetic" k1="1" k2="0" k3="0" k4="0" in="SourceGraphic" in2="paper" result="multiplied" />
+      <feComposite operator="arithmetic" k1="0" k2="0.18" k3="0.82" k4="0" in="multiplied" in2="SourceGraphic" result="textured" />
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="4" seed="8" result="warp" />
+      <feDisplacementMap in="textured" in2="warp" scale="1" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
   <div class="brand">
@@ -1340,10 +1299,7 @@
           for (let y = 0; y < ROWS; y++) {
             const cell = getCell(x, y);
             if (cell === EMPTY) continue;
-            offCtx.fillStyle = cell === FRUIT ? '#1b1a17' : '#2a2824';
-            if (cell === FRUIT) {
-              offCtx.fillStyle = '#000';
-            }
+            offCtx.fillStyle = cell === FRUIT ? '#000' : '#2a2824';
             offCtx.fillRect(x, y, 1, 1);
           }
         }
@@ -1360,6 +1316,8 @@
         }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f1ede1';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = getComputedStyle(canvas).color || '#1b1a17';
         const rampLen = RAMP.length - 1;
         const introElapsed = performance.now() - introStartTime;
@@ -1457,21 +1415,7 @@
         rafId = requestAnimationFrame(loop);
       }
 
-      function stop() {
-        running = false;
-        dead = false;
-        introducing = false;
-        card.classList.remove('snake-dead', 'snake-mode', 'snake-on-front', 'snake-on-back');
-        snakeOver.setAttribute('aria-hidden', 'true');
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = 0;
-        removeEventListener('keydown', onKeyDown);
-        removeEventListener('keyup', onKeyUp);
-        snakeOverRetry.removeEventListener('click', onRetry);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-
-      return { start, stop };
+      return { start };
     })();
 
     let rotX = 0;
