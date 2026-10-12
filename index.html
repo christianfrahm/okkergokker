@@ -101,14 +101,6 @@
       outline: none;
       -webkit-appearance: none;
       appearance: none;
-      transition:
-        opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        border-bottom-color 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .cheat-code.fading {
-      opacity: 0;
-      border-bottom-color: transparent;
     }
 
     .cheat-code:focus {
@@ -1423,21 +1415,7 @@
         rafId = requestAnimationFrame(loop);
       }
 
-      function stop() {
-        running = false;
-        dead = false;
-        introducing = false;
-        card.classList.remove('snake-dead', 'snake-mode', 'snake-on-front', 'snake-on-back');
-        snakeOver.setAttribute('aria-hidden', 'true');
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = 0;
-        removeEventListener('keydown', onKeyDown);
-        removeEventListener('keyup', onKeyUp);
-        snakeOverRetry.removeEventListener('click', onRetry);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-
-      return { start, stop };
+      return { start };
     })();
 
     let rotX = 0;
@@ -1625,61 +1603,12 @@
       snapRaf = requestAnimationFrame(step);
     }
 
-    document.querySelector('.wordmark').addEventListener('click', () => {
-      if (isCheatActive()) {
-        deactivateCheat();
-        return;
-      }
-      snapToFlatFace();
-    });
-
-    function clearCheatText() {
-      cheatCode.blur();
-      if (!cheatCode.value && !cheatCode.classList.contains('fading')) return;
-      cheatCode.classList.add('fading');
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        cheatCode.value = '';
-        cheatCode.classList.remove('fading');
-        cheatCode.removeEventListener('transitionend', finish);
-      };
-      cheatCode.addEventListener('transitionend', finish);
-      setTimeout(finish, 600);
-    }
-
-    function isCheatActive() {
-      return card.classList.contains('dorsia-on-front') ||
-        card.classList.contains('dorsia-on-back') ||
-        card.classList.contains('snake-mode') ||
-        card.classList.contains('snake-on-front') ||
-        card.classList.contains('snake-on-back') ||
-        card.dataset.dorsiaLoading === '1' ||
-        card.dataset.snakeLoading === '1';
-    }
-
-    function deactivateCheat() {
-      if (card.dataset.cheatExiting === '1') return;
-      if (card.classList.contains('dorsia-on-front') ||
-          card.classList.contains('dorsia-on-back') ||
-          card.dataset.dorsiaLoading === '1') {
-        deactivateDorsia();
-        return;
-      }
-      if (card.classList.contains('snake-mode') ||
-          card.classList.contains('snake-on-front') ||
-          card.classList.contains('snake-on-back') ||
-          card.dataset.snakeLoading === '1') {
-        deactivateSnake();
-      }
-    }
+    document.querySelector('.wordmark').addEventListener('click', () => snapToFlatFace());
 
     function activateDorsia() {
       if (card.classList.contains('dorsia-on-front') ||
           card.classList.contains('dorsia-on-back') ||
-          card.dataset.dorsiaLoading === '1' ||
-          card.dataset.cheatExiting === '1') return;
+          card.dataset.dorsiaLoading === '1') return;
       card.dataset.dorsiaLoading = '1';
       cheatCode.value = 'dorsia';
       cheatCode.blur();
@@ -1715,40 +1644,11 @@
       Promise.resolve(fontReady).then(startDorsia);
     }
 
-    function deactivateDorsia() {
-      if (card.dataset.cheatExiting === '1') return;
-      if (!card.classList.contains('dorsia-on-front') &&
-          !card.classList.contains('dorsia-on-back') &&
-          card.dataset.dorsiaLoading !== '1') return;
-
-      card.dataset.cheatExiting = '1';
-      delete card.dataset.dorsiaLoading;
-      clearCheatText();
-
-      const returnSide = card.classList.contains('dorsia-on-back') ? 'front' : 'back';
-      card.classList.remove('dorsia-ready');
-
-      const finish = () => {
-        card.classList.remove('dorsia-on-front', 'dorsia-on-back');
-        dorsiaCard.setAttribute('aria-hidden', 'true');
-        cardBack.appendChild(dorsiaCard);
-        delete card.dataset.cheatExiting;
-      };
-
-      const alreadyThere = returnSide === 'back' ? isFlatOnBack() : isFlatOnFront();
-      if (alreadyThere) {
-        finish();
-        return;
-      }
-      snapToFlatFace(finish, returnSide);
-    }
-
     function activateSnake() {
       if (card.classList.contains('snake-mode') ||
           card.classList.contains('snake-on-front') ||
           card.classList.contains('snake-on-back') ||
-          card.dataset.snakeLoading === '1' ||
-          card.dataset.cheatExiting === '1') return;
+          card.dataset.snakeLoading === '1') return;
       if (card.classList.contains('dorsia-on-front') ||
           card.classList.contains('dorsia-on-back') ||
           card.dataset.dorsiaLoading === '1') return;
@@ -1781,39 +1681,6 @@
         return;
       }
       snapToFlatFace(begin, targetSide);
-    }
-
-    function deactivateSnake() {
-      if (card.dataset.cheatExiting === '1') return;
-      if (!card.classList.contains('snake-mode') &&
-          !card.classList.contains('snake-on-front') &&
-          !card.classList.contains('snake-on-back') &&
-          card.dataset.snakeLoading !== '1') return;
-
-      card.dataset.cheatExiting = '1';
-      delete card.dataset.snakeLoading;
-      clearCheatText();
-
-      const returnSide = card.classList.contains('snake-on-back') ? 'front' : 'back';
-      const restoreHorse = returnSide === 'front';
-
-      const finish = () => {
-        snakeGame.stop();
-        card.appendChild(snakeCanvas);
-        card.appendChild(snakeOver);
-        if (restoreHorse && horseOn) {
-          cardFront.classList.add('horse-active');
-          horse.start();
-        }
-        delete card.dataset.cheatExiting;
-      };
-
-      const alreadyThere = returnSide === 'back' ? isFlatOnBack() : isFlatOnFront();
-      if (alreadyThere) {
-        finish();
-        return;
-      }
-      snapToFlatFace(finish, returnSide);
     }
 
     const CHEATS = {
