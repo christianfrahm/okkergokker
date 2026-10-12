@@ -101,12 +101,6 @@
       outline: none;
       -webkit-appearance: none;
       appearance: none;
-      transition: color 0.4s ease, caret-color 0.4s ease;
-    }
-
-    .cheat-code.clearing {
-      color: transparent;
-      caret-color: transparent;
     }
 
     .cheat-code:focus {
@@ -349,24 +343,16 @@
       pointer-events: auto;
     }
 
-    .card.snake-on-back .back-inner {
+    .card.snake-on-back .back-inner,
+    .card.snake-mode.snake-on-front .back-inner {
       display: none;
     }
 
-    .card.snake-on-front .card-front.horse-active .horse-canvas {
+    .card.snake-mode .card-front.horse-active .horse-canvas,
+    .card.snake-mode .ascii-art {
       opacity: 0 !important;
       visibility: hidden;
       pointer-events: none;
-    }
-
-    .card.snake-ready.snake-on-back .card-front.horse-active .horse-canvas {
-      opacity: 0 !important;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .card.snake-ready.snake-on-front .back-inner {
-      display: none;
     }
 
     .snake-over {
@@ -1429,20 +1415,7 @@
         rafId = requestAnimationFrame(loop);
       }
 
-      function stop() {
-        running = false;
-        dead = false;
-        introducing = false;
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = 0;
-        removeEventListener('keydown', onKeyDown);
-        removeEventListener('keyup', onKeyUp);
-        snakeOverRetry.removeEventListener('click', onRetry);
-        snakeOver.setAttribute('aria-hidden', 'true');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-
-      return { start, stop };
+      return { start };
     })();
 
     let rotX = 0;
@@ -1630,43 +1603,7 @@
       snapRaf = requestAnimationFrame(step);
     }
 
-    document.querySelector('.wordmark').addEventListener('click', () => {
-      clearCheatCodeSmooth();
-      if (card.classList.contains('dorsia-on-front') ||
-          card.classList.contains('dorsia-on-back') ||
-          card.dataset.dorsiaLoading === '1') {
-        deactivateDorsia();
-        return;
-      }
-      if (card.classList.contains('snake-mode') ||
-          card.classList.contains('snake-on-front') ||
-          card.classList.contains('snake-on-back') ||
-          card.dataset.snakeLoading === '1') {
-        deactivateSnake();
-        return;
-      }
-      snapToFlatFace();
-    });
-
-    function clearCheatCodeSmooth() {
-      if (!cheatCode.value || cheatCode.classList.contains('clearing')) return;
-      cheatCode.blur();
-      cheatCode.classList.add('clearing');
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        cheatCode.value = '';
-        cheatCode.classList.remove('clearing');
-        cheatCode.removeEventListener('transitionend', onEnd);
-      };
-      const onEnd = (e) => {
-        if (e.target !== cheatCode || e.propertyName !== 'color') return;
-        finish();
-      };
-      cheatCode.addEventListener('transitionend', onEnd);
-      setTimeout(finish, 450);
-    }
+    document.querySelector('.wordmark').addEventListener('click', () => snapToFlatFace());
 
     function activateDorsia() {
       if (card.classList.contains('dorsia-on-front') ||
@@ -1707,32 +1644,6 @@
       Promise.resolve(fontReady).then(startDorsia);
     }
 
-    function deactivateDorsia() {
-      if (card.dataset.dorsiaLoading === '1') return;
-      const onBack = card.classList.contains('dorsia-on-back');
-      const onFront = card.classList.contains('dorsia-on-front');
-      if (!onBack && !onFront) return;
-
-      card.dataset.dorsiaLoading = '1';
-      card.classList.remove('dorsia-ready');
-
-      const targetSide = onBack ? 'front' : 'back';
-      const alreadyThere = onBack ? isFlatOnFront() : isFlatOnBack();
-
-      const finish = () => {
-        card.classList.remove('dorsia-on-front', 'dorsia-on-back', 'dorsia-ready');
-        dorsiaCard.setAttribute('aria-hidden', 'true');
-        cardBack.appendChild(dorsiaCard);
-        delete card.dataset.dorsiaLoading;
-      };
-
-      if (alreadyThere) {
-        finish();
-        return;
-      }
-      snapToFlatFace(finish, targetSide);
-    }
-
     function activateSnake() {
       if (card.classList.contains('snake-mode') ||
           card.classList.contains('snake-on-front') ||
@@ -1755,49 +1666,21 @@
 
       host.appendChild(snakeCanvas);
       host.appendChild(snakeOver);
-      card.classList.add(sideClass, 'snake-mode');
+      card.classList.add(sideClass);
       horse.fadeOut();
-      snakeGame.start();
 
-      const finishReady = () => {
-        card.classList.add('snake-ready');
+      const begin = () => {
+        card.classList.add('snake-mode');
         delete card.dataset.snakeLoading;
+        snakeGame.start();
       };
 
       const alreadyThere = placeOnBack ? isFlatOnBack() : isFlatOnFront();
       if (alreadyThere) {
-        finishReady();
+        begin();
         return;
       }
-      snapToFlatFace(finishReady, targetSide);
-    }
-
-    function deactivateSnake() {
-      if (card.dataset.snakeLoading === '1') return;
-      const onBack = card.classList.contains('snake-on-back');
-      const onFront = card.classList.contains('snake-on-front');
-      if (!onBack && !onFront && !card.classList.contains('snake-mode')) return;
-
-      card.dataset.snakeLoading = '1';
-      card.classList.remove('snake-ready');
-
-      const targetSide = onBack ? 'front' : 'back';
-      const alreadyThere = onBack ? isFlatOnFront() : isFlatOnBack();
-
-      const finish = () => {
-        snakeGame.stop();
-        card.classList.remove('snake-on-front', 'snake-on-back', 'snake-mode', 'snake-ready', 'snake-dead');
-        card.appendChild(snakeCanvas);
-        card.appendChild(snakeOver);
-        delete card.dataset.snakeLoading;
-        horse.start();
-      };
-
-      if (alreadyThere) {
-        finish();
-        return;
-      }
-      snapToFlatFace(finish, targetSide);
+      snapToFlatFace(begin, targetSide);
     }
 
     const CHEATS = {
@@ -1807,24 +1690,7 @@
 
     function checkCheatCode() {
       if (window.matchMedia('(max-width: 768px)').matches) return;
-      const code = cheatCode.value.trim().toLowerCase();
-      if (!code) {
-        if (card.classList.contains('dorsia-on-front') ||
-            card.classList.contains('dorsia-on-back') ||
-            card.dataset.dorsiaLoading === '1') {
-          deactivateDorsia();
-          return;
-        }
-        if (card.classList.contains('snake-mode') ||
-            card.classList.contains('snake-on-front') ||
-            card.classList.contains('snake-on-back') ||
-            card.dataset.snakeLoading === '1') {
-          deactivateSnake();
-          return;
-        }
-        return;
-      }
-      const run = CHEATS[code];
+      const run = CHEATS[cheatCode.value.trim().toLowerCase()];
       if (run) run();
     }
 
